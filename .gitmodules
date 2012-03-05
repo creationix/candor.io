@@ -1,0 +1,6 @@
+[submodule "deps/libuv"]
+	path = deps/libuv
+	url = https://github.com/joyent/libuv.git
+[submodule "deps/candor"]
+	path = deps/candor
+	url = https://github.com/indutny/candor.git
