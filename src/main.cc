@@ -7,6 +7,8 @@
 
 using namespace candor;
 
+static void prettyPrint(Value* value);
+
 static Value* UvRun(uint32_t argc, Arguments& argv) {
   HandleScope scope;
 
@@ -31,24 +33,50 @@ static Value* NewTimer(uint32_t argc, Arguments& argv) {
   timer->Set(String::New("cdata", 5), cdata);
   timer->Set(String::New("type", 4), String::New("timer", 5));
 
+  handle->data = *timer;
+
   return *timer;
 }
 
 static void OnTimer(uv_timer_t* handle, int status) {
-  printf("OnTimer %d\n", status);
+  Object* timer = (Object*)handle->data;
+  Value* callback = timer->Get(String::New("onTimer", 7));
+  if (callback->Is<Function>()) {
+    callback->As<Function>()->Call(NULL, 0, NULL);
+  }
 }
 
 static Value* TimerStart(uint32_t argc, Arguments& argv) {
-
   assert(argc == 3);
   Object* timer = argv[0]->As<Object>();
   const char* type = timer->Get(String::New("type", 4))->As<String>()->Value();
   assert(strcmp(type, "timer") == 0);
   uv_timer_t* handle = (uv_timer_t*)timer->Get(String::New("cdata", 5))->As<String>()->Value();
+
   int64_t timeout = argv[1]->As<Number>()->IntegralValue();
   int64_t repeat = argv[2]->As<Number>()->IntegralValue();
 
   uv_timer_start(handle, OnTimer, timeout, repeat);
+
+  return Nil::New();
+}
+
+static void OnClose(uv_handle_t* handle) {
+  Object* timer = (Object*)handle->data;
+  Value* callback = timer->Get(String::New("onClose", 7));
+  if (callback->Is<Function>()) {
+    callback->As<Function>()->Call(NULL, 0, NULL);
+  }
+}
+
+static Value* Close(uint32_t argc, Arguments& argv) {
+  assert(argc == 1);
+  Object* timer = argv[0]->As<Object>();
+  const char* type = timer->Get(String::New("type", 4))->As<String>()->Value();
+  assert(strcmp(type, "timer") == 0);
+  uv_handle_t* handle = (uv_handle_t*)timer->Get(String::New("cdata", 5))->As<String>()->Value();
+
+  uv_close(handle, OnClose);
 
   return Nil::New();
 }
@@ -191,9 +219,9 @@ int main(int argc, char** argv) {
   global->Set(String::New("uv", 2), uv);
 
   uv->Set(String::New("run", 3), Function::New(UvRun));
-  uv->Set(String::New("newTimer", 3), Function::New(NewTimer));
-  uv->Set(String::New("timerStart", 3), Function::New(TimerStart));
-
+  uv->Set(String::New("newTimer", 8), Function::New(NewTimer));
+  uv->Set(String::New("timerStart", 10), Function::New(TimerStart));
+  uv->Set(String::New("close", 5), Function::New(Close));
 
   // Compile and run the script at argv[1]
   Handle<Function> script(compileScript(argv[1]));

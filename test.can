@@ -1,12 +1,20 @@
-scope print, uv
-print("Hello World", 42, true)
+scope uv
 
-timer = uv.newTimer()
-uv.timerStart(timer, 400, 400)
-print("timer =", '{ cdata:', timer.cdata, ', type:', timer.type,'}')
+setTimeout(callback, interval) {
+  scope uv, print
+  timer = uv.newTimer()
+  uv.timerStart(timer, interval, 0)
+  timer.onTimer = () {
+    scope uv, timer, callback
+    uv.close(timer)
+    callback()
+  }
+  return timer
+}
 
-print("Starting uv event loop")
+setTimeout(() {
+  scope print
+  print("Hello World!")
+}, 500)
+
 uv.run()
-print("uv event loop stopped")
-
-return timer
