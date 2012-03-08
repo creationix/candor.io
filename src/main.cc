@@ -7,15 +7,64 @@
 
 using namespace candor;
 
+static Value* UvRun(uint32_t argc, Arguments& argv) {
+  HandleScope scope;
+
+  uv_run(uv_default_loop());
+
+  return Nil::New();
+}
+
+static Value* NewTimer(uint32_t argc, Arguments& argv) {
+  HandleScope scope;
+
+  // Allocate a timer first locally, then copy to heap
+  uv_timer_t t;
+  String* cdata = String::New(reinterpret_cast<char*>(&t), sizeof(t));
+
+  // Get a pointer to the heap version and initialize it
+  uv_timer_t* handle = (uv_timer_t*)cdata->Value();
+  uv_timer_init(uv_default_loop(), handle);
+
+  // Create an object with cdata and type properties and return it.
+  Handle<Object> timer(Object::New());
+  timer->Set(String::New("cdata", 5), cdata);
+  timer->Set(String::New("type", 4), String::New("timer", 5));
+
+  return *timer;
+}
+
+static void OnTimer(uv_timer_t* handle, int status) {
+  printf("OnTimer %d\n", status);
+}
+
+static Value* TimerStart(uint32_t argc, Arguments& argv) {
+
+  assert(argc == 3);
+  Object* timer = argv[0]->As<Object>();
+  const char* type = timer->Get(String::New("type", 4))->As<String>()->Value();
+  assert(strcmp(type, "timer") == 0);
+  uv_timer_t* handle = (uv_timer_t*)timer->Get(String::New("cdata", 5))->As<String>()->Value();
+  int64_t timeout = argv[1]->As<Number>()->IntegralValue();
+  int64_t repeat = argv[2]->As<Number>()->IntegralValue();
+
+  uv_timer_start(handle, OnTimer, timeout, repeat);
+
+  return Nil::New();
+}
+
 
 static Value* Print(uint32_t argc, Arguments& argv) {
   HandleScope scope;
-
-  assert(argc == 1);
-
-  Handle<String> str(argv[0]->ToString());
-  printf("%s\n", str->Value());
-
+  // Print all arguments as strings with spaces and a newline.
+  for (uint32_t i = 0; i < argc; i++) {
+    const char* part = argv[i]->ToString()->Value();
+    if (i == argc - 1) {
+      printf("%s\n", part);
+    } else {
+      printf("%s ", part);
+    }
+  }
   return Nil::New();
 }
 
@@ -137,6 +186,15 @@ int main(int argc, char** argv) {
     args->Set(String::New(buf, strlen(buf)), String::New(arg, strlen(arg)));
   }
 
+  // Create a global args array.
+  Object* uv = Object::New();
+  global->Set(String::New("uv", 2), uv);
+
+  uv->Set(String::New("run", 3), Function::New(UvRun));
+  uv->Set(String::New("newTimer", 3), Function::New(NewTimer));
+  uv->Set(String::New("timerStart", 3), Function::New(TimerStart));
+
+
   // Compile and run the script at argv[1]
   Handle<Function> script(compileScript(argv[1]));
   Value* result = script->Call(*global, 0, NULL);
@@ -146,9 +204,6 @@ int main(int argc, char** argv) {
     prettyPrint(result);
     printf("\n");
   }
-
-  // Start the libuv event loop
-  uv_run(uv_default_loop());
 
   return 0;
 }

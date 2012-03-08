@@ -1,4 +1,12 @@
-scope print
+scope print, uv
+print("Hello World", 42, true)
 
-print("Hello World")
+timer = uv.newTimer()
+uv.timerStart(timer, 400, 400)
+print("timer =", '{ cdata:', timer.cdata, ', type:', timer.type,'}')
 
+print("Starting uv event loop")
+uv.run()
+print("uv event loop stopped")
+
+return timer
