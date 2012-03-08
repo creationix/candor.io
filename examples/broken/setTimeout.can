@@ -1,17 +1,19 @@
+// TODO: fix candor so that callback isn't always nil
 
-// Define a javascript-like setTimeout function using the uv primitives
 setTimeout(callback, interval) {
-  scope uv
+  scope uv, print
+  print("{ callback:", callback, "}")
   timer = uv.newTimer()
   uv.timerStart(timer, interval, 0)
   timer.onTimer = () {
-    scope uv, timer, callback
+    scope uv, timer, callback, print
     uv.close(timer)
     callback()
+    print("{ callback:", callback, "}")
   }
+  return timer
 }
 
-// Test it with a delayed greeting!
 setTimeout(() {
   scope print
   print("Hello World!")

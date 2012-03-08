@@ -9,14 +9,6 @@ using namespace candor;
 
 static void prettyPrint(Value* value);
 
-static Value* UvRun(uint32_t argc, Arguments& argv) {
-  HandleScope scope;
-
-  uv_run(uv_default_loop());
-
-  return Nil::New();
-}
-
 static Value* NewTimer(uint32_t argc, Arguments& argv) {
   HandleScope scope;
 
@@ -81,12 +73,56 @@ static Value* Close(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
+// Implement typeof till it's part of the language
+static Value* Typeof(uint32_t argc, Arguments& argv) {
+  assert(argc == 1);
+  const char* type;
+  Value* value = argv[0];
+  if (value->Is<Function>()) {
+    type = "function";
+  } else if (value->Is<Object>()) {
+    type = "object";
+  } else if (value->Is<Number>()) {
+    type = "number";
+  } else if (value->Is<Boolean>()) {
+    type = "boolean";
+  } else if (value->Is<String>()) {
+    type = "string";
+  } else if (value->Is<Nil>()) {
+    type = "nil";
+  } else {
+    assert(false);
+  }
+  return String::New(type, strlen(type));
+}
+
+// Implement sizeof till it's part of the language
+static Value* Sizeof(uint32_t argc, Arguments& argv) {
+  assert(argc == 1);
+  Value* value = argv[0];
+  if (value->Is<String>()) {
+    return Number::NewIntegral(value->As<String>()->Length());
+  }
+  // TODO: add in array length once it's implemented
+  return Nil::New();
+}
 
 static Value* Print(uint32_t argc, Arguments& argv) {
   HandleScope scope;
   // Print all arguments as strings with spaces and a newline.
   for (uint32_t i = 0; i < argc; i++) {
-    const char* part = argv[i]->ToString()->Value();
+    Value* value = argv[i];
+    const char* part;
+    if (value->Is<Function>()) {
+      part = "[Function]";
+    } else if (value->Is<Object>()) {
+      part = "[Object]";
+    } else if (value->Is<Nil>()) {
+      part = "nil";
+    } else {
+      part = value->ToString()->Value();
+    }
+
     if (i == argc - 1) {
       printf("%s\n", part);
     } else {
@@ -202,6 +238,8 @@ int main(int argc, char** argv) {
   // Create a global context
   Handle<Object> global(Object::New());
   global->Set(String::New("print", 5), Function::New(Print));
+  global->Set(String::New("typeof", 6), Function::New(Typeof));
+  global->Set(String::New("sizeof", 6), Function::New(Sizeof));
 
   // Create a global args array.
   Object* args = Object::New();
@@ -218,7 +256,6 @@ int main(int argc, char** argv) {
   Object* uv = Object::New();
   global->Set(String::New("uv", 2), uv);
 
-  uv->Set(String::New("run", 3), Function::New(UvRun));
   uv->Set(String::New("newTimer", 8), Function::New(NewTimer));
   uv->Set(String::New("timerStart", 10), Function::New(TimerStart));
   uv->Set(String::New("close", 5), Function::New(Close));
@@ -232,6 +269,8 @@ int main(int argc, char** argv) {
     prettyPrint(result);
     printf("\n");
   }
+
+  uv_run(uv_default_loop());
 
   return 0;
 }
