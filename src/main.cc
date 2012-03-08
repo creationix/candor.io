@@ -3,8 +3,22 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 using namespace candor;
+
+
+static Value* Print(uint32_t argc, Arguments& argv) {
+  printf("Print\n");
+  HandleScope scope;
+
+  assert(argc == 1);
+
+  Handle<String> str(argv[0]->As<String>());
+  printf("%s\n", str->Value());
+
+  return Nil::New();
+}
 
 // Load a script from disk and compile it into a function
 // This code *will* be replaced, it's just a hack to make testing easier.
@@ -109,21 +123,24 @@ int main(int argc, char** argv) {
   // Create a new Isolate
   Isolate I;
 
-  // TODO: Implement once there is an API for this
   // Create a global context
-  // Object* context = Object::New(&I);
-  // Object* args = Object::New(&I);
-  // context->Set("args", 4, args);
-  // int i;
-  // for (i = 0; i < argv; i++) {
-  //   c
-  //     void Set(const char* key, uint32_t len, Value* value);
+  Handle<Object> global(Object::New());
+  global->Set(String::New("print", 5), Function::New(Print));
 
-  // }
+  // Create a global args array.
+  Object* args = Object::New();
+  global->Set(String::New("args", 4), args);
+  int i;
+  for (i = 0; i < argc; i++) {
+    const char* arg = argv[i];
+    char buf[16];
+    snprintf(buf, 16, "%d", i);
+    args->Set(String::New(buf, strlen(buf)), String::New(arg, strlen(arg)));
+  }
 
   // Compile and run the script at argv[1]
-  Function* script = compileScript(argv[1]);
-  Value* result = script->Call(NULL, 0, NULL);
+  Handle<Function> script(compileScript(argv[1]));
+  Value* result = script->Call(*global, 0, NULL);
   printf("result: ");
   prettyPrint(result);
   printf("\n");
