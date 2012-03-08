@@ -9,12 +9,11 @@ using namespace candor;
 
 
 static Value* Print(uint32_t argc, Arguments& argv) {
-  printf("Print\n");
   HandleScope scope;
 
   assert(argc == 1);
 
-  Handle<String> str(argv[0]->As<String>());
+  Handle<String> str(argv[0]->ToString());
   printf("%s\n", str->Value());
 
   return Nil::New();
@@ -141,9 +140,12 @@ int main(int argc, char** argv) {
   // Compile and run the script at argv[1]
   Handle<Function> script(compileScript(argv[1]));
   Value* result = script->Call(*global, 0, NULL);
-  printf("result: ");
-  prettyPrint(result);
-  printf("\n");
+
+  if (!result->Is<Nil>()) {
+    printf("result: ");
+    prettyPrint(result);
+    printf("\n");
+  }
 
   // Start the libuv event loop
   uv_run(uv_default_loop());

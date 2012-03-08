@@ -1,3 +1,4 @@
 scope print
+
 print("Hello World")
-return print
+
