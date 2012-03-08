@@ -29,7 +29,7 @@ static Function* compileScript(Isolate* I, const char* filename) {
 
   fclose(fd);
 
-  Function* script = Function::New(I, data, length);
+  Function* script = Function::New(data, length);
   free(data);
 
   return script;
