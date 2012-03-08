@@ -13,14 +13,8 @@ LIBS=build/main.o
 
 all: build/canio
 
-${CANDIR}/Makefile:
-	git submodule update --init ${CANDIR}
-
 ${CANDIR}/candor.a: ${CANDIR}/Makefile
 	$(MAKE) -C ${CANDIR} candor.a
-
-${UVDIR}/Makefile:
-	git submodule update --init ${UVDIR}
 
 ${UVDIR}/uv.a: ${UVDIR}/Makefile
 	$(MAKE) -C ${UVDIR} uv.a
