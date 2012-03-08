@@ -8,7 +8,7 @@ using namespace candor;
 
 // Load a script from disk and compile it into a function
 // This code *will* be replaced, it's just a hack to make testing easier.
-static Function* compileScript(Isolate* I, const char* filename) {
+static Function* compileScript(const char* filename) {
   FILE* fd;
   unsigned long length;
   char* data;
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
   // }
 
   // Compile and run the script at argv[1]
-  Function* script = compileScript(&I, argv[1]);
+  Function* script = compileScript(argv[1]);
   Value* result = script->Call(NULL, 0, NULL);
   printf("result: ");
   prettyPrint(result);
