@@ -7,32 +7,50 @@
 
 using namespace candor;
 
-static void prettyPrint(Value* value);
+// internal flags
+enum isTYPE {
+  isHANDLE  = 0x01,
+  isSTREAM  = 0x02,
+  isTCP     = 0x04,
+  isUDP     = 0x08,
+  isPIPE    = 0x10,
+  isTTY     = 0x20,
+  isTIMER   = 0x40,
+  isPROCESS = 0x80
+};
+
+enum kTYPE {
+  kHANDLE   = isHANDLE,
+  kSTREAM   = isHANDLE | isSTREAM,
+  kTCP      = isHANDLE | isSTREAM | isTCP,
+  kUDP      = isHANDLE | isUDP,
+  kPIPE     = isHANDLE | isSTREAM | isPIPE,
+  kTTY      = isHANDLE | isSTREAM | isTTY,
+  kTIMER    = isHANDLE | isTIMER,
+  kPROCESS  = isHANDLE | isPROCESS
+};
+
 
 static Value* NewTimer(uint32_t argc, Arguments& argv) {
-  HandleScope scope;
 
-  // Allocate a timer first locally, then copy to heap
-  uv_timer_t t;
-  String* cdata = String::New(reinterpret_cast<char*>(&t), sizeof(t));
+  // Create a candor object with cdata and type
+  // callbacks will go on this object later
+  Handle<Object> self(Object::New());
+  CData* cdata = CData::New(sizeof(uv_timer_t));
+  self->Set(String::New("cdata", 5), cdata);
+  self->Set(String::New("type", 4), Number::NewIntegral(kTIMER));
 
-  // Get a pointer to the heap version and initialize it
-  uv_timer_t* handle = (uv_timer_t*)cdata->Value();
+  // Initialize the libuv struct and point back to the whole object.
+  uv_timer_t* handle = (uv_timer_t*)cdata->GetContents();
   uv_timer_init(uv_default_loop(), handle);
+  handle->data = *self;
 
-  // Create an object with cdata and type properties and return it.
-  Handle<Object> timer(Object::New());
-  timer->Set(String::New("cdata", 5), cdata);
-  timer->Set(String::New("type", 4), String::New("timer", 5));
-
-  handle->data = *timer;
-
-  return *timer;
+  return *self;
 }
 
 static void OnTimer(uv_timer_t* handle, int status) {
-  Object* timer = (Object*)handle->data;
-  Value* callback = timer->Get(String::New("onTimer", 7));
+  Object* self = (Object*)handle->data;
+  Value* callback = self->Get(String::New("onTimer", 7));
   if (callback->Is<Function>()) {
     callback->As<Function>()->Call(NULL, 0, NULL);
   }
@@ -40,10 +58,9 @@ static void OnTimer(uv_timer_t* handle, int status) {
 
 static Value* TimerStart(uint32_t argc, Arguments& argv) {
   assert(argc == 3);
-  Object* timer = argv[0]->As<Object>();
-  const char* type = timer->Get(String::New("type", 4))->As<String>()->Value();
-  assert(strcmp(type, "timer") == 0);
-  uv_timer_t* handle = (uv_timer_t*)timer->Get(String::New("cdata", 5))->As<String>()->Value();
+  Object* self = argv[0]->As<Object>();
+  assert(self->Get(String::New("type", 4))->As<Number>()->IntegralValue() & isTIMER);
+  uv_timer_t* handle = (uv_timer_t*)self->Get(String::New("cdata", 5))->As<CData>()->GetContents();
 
   int64_t timeout = argv[1]->As<Number>()->IntegralValue();
   int64_t repeat = argv[2]->As<Number>()->IntegralValue();
@@ -54,8 +71,8 @@ static Value* TimerStart(uint32_t argc, Arguments& argv) {
 }
 
 static void OnClose(uv_handle_t* handle) {
-  Object* timer = (Object*)handle->data;
-  Value* callback = timer->Get(String::New("onClose", 7));
+  Object* self = (Object*)handle->data;
+  Value* callback = self->Get(String::New("onClose", 7));
   if (callback->Is<Function>()) {
     callback->As<Function>()->Call(NULL, 0, NULL);
   }
@@ -63,52 +80,17 @@ static void OnClose(uv_handle_t* handle) {
 
 static Value* Close(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
-  Object* timer = argv[0]->As<Object>();
-  const char* type = timer->Get(String::New("type", 4))->As<String>()->Value();
-  assert(strcmp(type, "timer") == 0);
-  uv_handle_t* handle = (uv_handle_t*)timer->Get(String::New("cdata", 5))->As<String>()->Value();
+  Object* self = argv[0]->As<Object>();
+  assert(self->Get(String::New("type", 4))->As<Number>()->IntegralValue() & isHANDLE);
+  uv_handle_t* handle = (uv_handle_t*)self->Get(String::New("cdata", 5))->As<CData>()->GetContents();
 
   uv_close(handle, OnClose);
 
   return Nil::New();
 }
 
-// Implement typeof till it's part of the language
-static Value* Typeof(uint32_t argc, Arguments& argv) {
-  assert(argc == 1);
-  const char* type;
-  Value* value = argv[0];
-  if (value->Is<Function>()) {
-    type = "function";
-  } else if (value->Is<Object>()) {
-    type = "object";
-  } else if (value->Is<Number>()) {
-    type = "number";
-  } else if (value->Is<Boolean>()) {
-    type = "boolean";
-  } else if (value->Is<String>()) {
-    type = "string";
-  } else if (value->Is<Nil>()) {
-    type = "nil";
-  } else {
-    assert(false);
-  }
-  return String::New(type, strlen(type));
-}
-
-// Implement sizeof till it's part of the language
-static Value* Sizeof(uint32_t argc, Arguments& argv) {
-  assert(argc == 1);
-  Value* value = argv[0];
-  if (value->Is<String>()) {
-    return Number::NewIntegral(value->As<String>()->Length());
-  }
-  // TODO: add in array length once it's implemented
-  return Nil::New();
-}
 
 static Value* Print(uint32_t argc, Arguments& argv) {
-  HandleScope scope;
   // Print all arguments as strings with spaces and a newline.
   for (uint32_t i = 0; i < argc; i++) {
     Value* value = argv[i];
@@ -238,8 +220,6 @@ int main(int argc, char** argv) {
   // Create a global context
   Handle<Object> global(Object::New());
   global->Set(String::New("print", 5), Function::New(Print));
-  global->Set(String::New("typeof", 6), Function::New(Typeof));
-  global->Set(String::New("sizeof", 6), Function::New(Sizeof));
 
   // Create a global args array.
   Object* args = Object::New();
