@@ -52,7 +52,7 @@ static void OnTimer(uv_timer_t* handle, int status) {
   Object* self = (Object*)handle->data;
   Value* callback = self->Get(String::New("onTimer", 7));
   if (callback->Is<Function>()) {
-    callback->As<Function>()->Call(NULL, 0, NULL);
+    callback->As<Function>()->Call(0, NULL);
   }
 }
 
@@ -74,7 +74,7 @@ static void OnClose(uv_handle_t* handle) {
   Object* self = (Object*)handle->data;
   Value* callback = self->Get(String::New("onClose", 7));
   if (callback->Is<Function>()) {
-    callback->As<Function>()->Call(NULL, 0, NULL);
+    callback->As<Function>()->Call(0, NULL);
   }
 }
 
@@ -152,7 +152,7 @@ static void prettyPrint(Value* value) {
   if (value->Is<Number>()) {
     Number* num = (Number*)value;
     if (num->IsIntegral()) {
-      printf("%ld", num->IntegralValue());
+      printf("%lld", num->IntegralValue());
     } else {
       printf("%f", num->Value());
     }
@@ -180,7 +180,7 @@ static void prettyPrint(Value* value) {
         case '\"': printf("\\\""); break;
         case '\\': printf("\\\\"); break;
         default:
-          if (value[i] > 0x20 && value[i] < 0x80) {
+          if (value[i] > 0x20) {
             printf("%c", value[i]);
           } else {
             printf("\\%x", value[i]);
@@ -242,7 +242,8 @@ int main(int argc, char** argv) {
 
   // Compile and run the script at argv[1]
   Handle<Function> script(compileScript(argv[1]));
-  Value* result = script->Call(*global, 0, NULL);
+  script->SetContext(*global);
+  Value* result = script->Call(0, NULL);
 
   if (!result->Is<Nil>()) {
     printf("result: ");
