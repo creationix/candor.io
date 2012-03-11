@@ -12,13 +12,13 @@ namespace candorIO {
    public:
 
     static void OnClose(uv_handle_t* handle);
-    static uvHandle* Unwrap(Value* value);
 
     Value* Close(uint32_t argc, Arguments& argv);
 
+    static uvHandle* Unwrap(Value* value);
+
   };
 }
-
 
 void luv_handle_init(Object* uv);
 

@@ -1,11 +1,11 @@
 #ifndef LUV_TIMER_H
 #define LUV_TIMER_H
 
+#include "luv_handle.h"
 #include "candor.h"
+using namespace candor;
 
 namespace candorIO {
-
-
 
   class uvTimer : public uvHandle {
     uv_timer_t handle;
@@ -26,8 +26,6 @@ namespace candorIO {
     static uvTimer* Unwrap(Value* value);
   };
 }
-
-using namespace candor;
 
 void luv_timer_init(Object* uv);
 
