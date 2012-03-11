@@ -1,18 +1,79 @@
-
-// Define a javascript-like setTimeout function using the uv primitives
-setTimeout(callback, interval) {
-  scope uv
-  timer = uv.newTimer()
-  uv.timerStart(timer, interval, 0)
-  timer.onTimer = () {
-    scope uv, timer, callback
-    uv.close(timer)
-    callback()
+// Simple pretty printer
+dump(value) {
+  type = typeof value
+  if (type == "nil") {
+    return "nil"
   }
+  if (type == "boolean" || type == "number") {
+    return "" + @value
+  }
+  if (type == "string") {
+    return '"' + @value + '"'
+  }
+  if (type == "object") {
+    keys = keysof @value
+    length = sizeof keys
+    i = 0
+    escaped = "{ "
+    while (i < length) {
+      key = @keys[@i]
+      part = @dump(@value[key])
+      @escaped = @escaped + key + ": " + part
+      if (@i < @length - 1) {
+        @escaped = @escaped + ", "
+      }
+      @i++
+    }
+    return escaped + " }"
+  }
+  if (type == "array") {
+    length = sizeof @value
+    i = 0
+    escaped = "[ "
+    while (i < length) {
+      @escaped = @escaped + @dump(@value[@i])
+      @print(@escaped)
+      if (@i < @length - 1) {
+        @escaped = @escaped + ", "
+      }
+      @i++
+    }
+    return escaped + " ]"
+  }
+  return "[" + type + "]"
 }
 
-// Test it with a delayed greeting!
-setTimeout(() {
-  scope print
-  print("Hello World!")
-}, 500)
+// Quick and dirty pretty printer
+p(label, value) {
+  @print(label, @dump(value))
+}
+
+Timer = @uv.Timer
+Handle = @uv.Handle
+
+p("Timer", Timer)
+
+timer = Timer.create()
+timer2 = Timer.create()
+
+Timer.start(timer, 2000, 0, () {
+  @print("onTimeout")
+  @Timer.stop(@timer2)
+  @Timer.stop(@timer)
+  @Handle.close(@timer, () {
+    @print("close1")
+  })
+  @Handle.close(@timer2, () {
+    @print("close2")
+  })
+})
+
+Timer.start(timer2, 333, 333, () {
+  @print("onInterval")
+  period = @Timer.getRepeat(@timer2)
+  @p("period", period)
+  @Timer.setRepeat(@timer2, period / 1.2 + 1)
+})
+
+p("timer", timer)
+p("timer2", timer2)

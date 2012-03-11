@@ -9,7 +9,12 @@ MAKEFLAGS+=-e
 DEPS=${CANDIR}/candor.a  \
      ${UVDIR}/uv.a
 
-LIBS=build/main.o
+LIBS=build/main.o       \
+     build/cio.o        \
+     build/luv.o        \
+     build/luv_misc.o   \
+     build/luv_handle.o \
+     build/luv_timer.o
 
 all: build/canio
 
