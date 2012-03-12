@@ -12,7 +12,7 @@ namespace candorIO {
     Function* onTimer;
    public:
 
-    void Initialize();
+    uvTimer();
 
     static void OnTimer(uv_timer_t* handle, int status);
 
@@ -22,8 +22,6 @@ namespace candorIO {
     Value* Stop(uint32_t argc, Arguments& argv);
     Value* Again(uint32_t argc, Arguments& argv);
 
-    static void WeakCallback(CData* cdata);
-    static uvTimer* Unwrap(Value* value);
   };
 }
 

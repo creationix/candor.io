@@ -6,7 +6,7 @@ using namespace candor;
 
 namespace candorIO {
 
-  class uvHandle {
+  class uvHandle : public CWrapper {
     uv_handle_t handle;
     Function* onClose;
    public:
@@ -14,8 +14,6 @@ namespace candorIO {
     static void OnClose(uv_handle_t* handle);
 
     Value* Close(uint32_t argc, Arguments& argv);
-
-    static uvHandle* Unwrap(Value* value);
 
   };
 }

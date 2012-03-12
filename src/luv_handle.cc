@@ -20,13 +20,9 @@ Value* uvHandle::Close(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-uvHandle* uvHandle::Unwrap(Value* value) {
-  return reinterpret_cast<uvHandle*>(value->As<CData>()->GetContents());
-}
-
 static Value* luv_close(uint32_t argc, Arguments& argv) {
   assert(argc && argv[0]->Is<CData>());
-  return uvHandle::Unwrap(argv[0])->Close(argc, argv);
+  return CWrapper::Unwrap<uvHandle>(argv[0])->Close(argc, argv);
 }
 
 void luv_handle_init(Object* uv) {
