@@ -7,11 +7,27 @@
 using namespace candor;
 using namespace candorIO;
 
-static void luv_on_close(uv_handle_t* handle);
+// Wrapper C functions when functions pointers are needed
+static void luv_on_close(uv_handle_t* handle) {
+  (reinterpret_cast<uvHandle*>(handle->data))->OnClose();
+}
+static Value* luv_close(uint32_t argc, Arguments& argv) {
+  assert(argc && argv[0]->Is<CData>());
+  return CWrapper::Unwrap<uvHandle>(argv[0])->Close(argc, argv);
+}
+
+// Create the Handle object that wraps the C functions
+void luv_handle_init(Object* uv) {
+  Object* handle = Object::New();
+  uv->Set(String::New("Handle", 6), handle);
+  handle->Set(String::New("close", 5), Function::New(luv_close));
+}
+
+// Implement class methods.
 
 void uvHandle::OnClose() {
-  Unref();
   onClose->Call(0, NULL);
+  Unref();
 }
 
 Value* uvHandle::Close(uint32_t argc, Arguments& argv) {
@@ -23,17 +39,4 @@ Value* uvHandle::Close(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-static void luv_on_close(uv_handle_t* handle) {
-  (reinterpret_cast<uvHandle*>(handle->data))->OnClose();
-}
 
-static Value* luv_close(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<uvHandle>(argv[0])->Close(argc, argv);
-}
-
-void luv_handle_init(Object* uv) {
-  Object* handle = Object::New();
-  uv->Set(String::New("Handle", 6), handle);
-  handle->Set(String::New("close", 5), Function::New(luv_close));
-}

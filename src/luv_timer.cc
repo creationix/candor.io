@@ -11,7 +11,49 @@
 using namespace candor;
 using namespace candorIO;
 
-static void luv_on_timer(uv_timer_t* handle, int status);
+
+// Wrapper C functions when functions pointers are needed
+static void luv_on_timer(uv_timer_t* handle, int status) {
+  (reinterpret_cast<uvTimer*>(handle->data))->OnTimer(status);
+}
+static Value* luv_create_timer(uint32_t argc, Arguments& argv) {
+  assert(argc == 0);
+  return (new uvTimer())->Wrap();
+}
+static Value* luv_timer_start(uint32_t argc, Arguments& argv) {
+  assert(argc && argv[0]->Is<CData>());
+  return CWrapper::Unwrap<uvTimer>(argv[0])->Start(argc, argv);
+}
+static Value* luv_timer_stop(uint32_t argc, Arguments& argv) {
+  assert(argc && argv[0]->Is<CData>());
+  return CWrapper::Unwrap<uvTimer>(argv[0])->Stop(argc, argv);
+}
+static Value* luv_timer_again(uint32_t argc, Arguments& argv) {
+  assert(argc && argv[0]->Is<CData>());
+  return CWrapper::Unwrap<uvTimer>(argv[0])->Again(argc, argv);
+}
+static Value* luv_timer_get_repeat(uint32_t argc, Arguments& argv) {
+  assert(argc && argv[0]->Is<CData>());
+  return CWrapper::Unwrap<uvTimer>(argv[0])->GetRepeat(argc, argv);
+}
+static Value* luv_timer_set_repeat(uint32_t argc, Arguments& argv) {
+  assert(argc && argv[0]->Is<CData>());
+  return CWrapper::Unwrap<uvTimer>(argv[0])->SetRepeat(argc, argv);
+}
+
+// Create the Timer object that wraps the C functions
+void luv_timer_init(Object* uv) {
+  Object* timer = Object::New();
+  uv->Set("Timer", timer);
+  timer->Set("create", Function::New(luv_create_timer));
+  timer->Set("start", Function::New(luv_timer_start));
+  timer->Set("stop", Function::New(luv_timer_stop));
+  timer->Set("again", Function::New(luv_timer_again));
+  timer->Set("getRepeat", Function::New(luv_timer_get_repeat));
+  timer->Set("setRepeat", Function::New(luv_timer_set_repeat));
+}
+
+// Implement class methods.
 
 uvTimer::uvTimer() {
   uv_timer_init(uv_default_loop(), &handle);
@@ -48,8 +90,8 @@ Value* uvTimer::SetRepeat(uint32_t argc, Arguments& argv) {
 
 Value* uvTimer::Stop(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
-  Unref();
   uv_timer_stop(&handle);
+  Unref();
   return Nil::New();
 }
 
@@ -57,45 +99,4 @@ Value* uvTimer::Again(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
   uv_timer_again(&handle);
   return Nil::New();
-}
-
-static void luv_on_timer(uv_timer_t* handle, int status) {
-  (reinterpret_cast<uvTimer*>(handle->data))->OnTimer(status);
-}
-
-static Value* luv_create_timer(uint32_t argc, Arguments& argv) {
-  assert(argc == 0);
-  uvTimer* timer = new uvTimer();
-  return timer->Wrap();
-}
-
-static Value* luv_timer_start(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<uvTimer>(argv[0])->Start(argc, argv);
-}
-
-static Value* luv_timer_get_repeat(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<uvTimer>(argv[0])->GetRepeat(argc, argv);
-}
-
-static Value* luv_timer_set_repeat(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<uvTimer>(argv[0])->SetRepeat(argc, argv);
-}
-
-static Value* luv_timer_stop(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<uvTimer>(argv[0])->Stop(argc, argv);
-}
-
-void luv_timer_init(Object* uv) {
-  Object* timer = Object::New();
-  uv->Set("Timer", timer);
-  timer->Set("create", Function::New(luv_create_timer));
-  timer->Set("start", Function::New(luv_timer_start));
-  timer->Set("getRepeat", Function::New(luv_timer_get_repeat));
-  timer->Set("setRepeat", Function::New(luv_timer_set_repeat));
-  timer->Set("stop", Function::New(luv_timer_stop));
-
 }
