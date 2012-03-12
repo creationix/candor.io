@@ -11,14 +11,15 @@
 using namespace candor;
 using namespace candorIO;
 
+static void luv_on_timer(uv_timer_t* handle, int status);
+
 uvTimer::uvTimer() {
   uv_timer_init(uv_default_loop(), &handle);
   handle.data = this;
 }
 
-void uvTimer::OnTimer(uv_timer_t* handle, int status) {
-  uvTimer* self = reinterpret_cast<uvTimer*>(handle->data);
-  self->onTimer->Call(0, NULL);
+void uvTimer::OnTimer(int status) {
+  onTimer->Call(0, NULL);
 }
 
 Value* uvTimer::Start(uint32_t argc, Arguments& argv) {
@@ -27,7 +28,8 @@ Value* uvTimer::Start(uint32_t argc, Arguments& argv) {
   int64_t timeout = argv[1]->As<Number>()->IntegralValue();
   int64_t repeat = argv[2]->As<Number>()->IntegralValue();
   onTimer = argv[3]->As<Function>();
-  uv_timer_start(&handle, OnTimer, timeout, repeat);
+  uv_timer_start(&handle, luv_on_timer, timeout, repeat);
+  Ref();
   return Nil::New();
 }
 
@@ -46,6 +48,7 @@ Value* uvTimer::SetRepeat(uint32_t argc, Arguments& argv) {
 
 Value* uvTimer::Stop(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
+  Unref();
   uv_timer_stop(&handle);
   return Nil::New();
 }
@@ -54,6 +57,10 @@ Value* uvTimer::Again(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
   uv_timer_again(&handle);
   return Nil::New();
+}
+
+static void luv_on_timer(uv_timer_t* handle, int status) {
+  (reinterpret_cast<uvTimer*>(handle->data))->OnTimer(status);
 }
 
 static Value* luv_create_timer(uint32_t argc, Arguments& argv) {

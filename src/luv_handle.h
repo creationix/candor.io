@@ -10,11 +10,8 @@ namespace candorIO {
     uv_handle_t handle;
     Function* onClose;
    public:
-
-    static void OnClose(uv_handle_t* handle);
-
+    void OnClose();
     Value* Close(uint32_t argc, Arguments& argv);
-
   };
 }
 

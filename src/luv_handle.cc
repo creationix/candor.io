@@ -7,17 +7,24 @@
 using namespace candor;
 using namespace candorIO;
 
-void uvHandle::OnClose(uv_handle_t* handle) {
-  uvHandle* self = reinterpret_cast<uvHandle*>(handle->data);
-  self->onClose->Call(0, NULL);
+static void luv_on_close(uv_handle_t* handle);
+
+void uvHandle::OnClose() {
+  Unref();
+  onClose->Call(0, NULL);
 }
 
 Value* uvHandle::Close(uint32_t argc, Arguments& argv) {
   if (argc > 1 && argv[1]->Is<Function>()) {
     onClose = argv[1]->As<Function>();
   }
-  uv_close(&handle, uvHandle::OnClose);
+  uv_close(&handle, luv_on_close);
+  Ref();
   return Nil::New();
+}
+
+static void luv_on_close(uv_handle_t* handle) {
+  (reinterpret_cast<uvHandle*>(handle->data))->OnClose();
 }
 
 static Value* luv_close(uint32_t argc, Arguments& argv) {

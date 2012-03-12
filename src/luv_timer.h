@@ -11,17 +11,13 @@ namespace candorIO {
     uv_timer_t handle;
     Function* onTimer;
    public:
-
     uvTimer();
-
-    static void OnTimer(uv_timer_t* handle, int status);
-
+    void OnTimer(int status);
     Value* Start(uint32_t argc, Arguments& argv);
     Value* GetRepeat(uint32_t argc, Arguments& argv);
     Value* SetRepeat(uint32_t argc, Arguments& argv);
     Value* Stop(uint32_t argc, Arguments& argv);
     Value* Again(uint32_t argc, Arguments& argv);
-
   };
 }
 

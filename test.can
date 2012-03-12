@@ -56,26 +56,52 @@ p(label, value) {
 p("Timer", Timer)
 
 timer = Timer.create()
+__$gc()
 timer2 = Timer.create()
+print("started-2")
+__$gc()
+print("started-1")
 
 Timer.start(timer, 2400, 0, () {
+  __$gc()
   print("onTimeout")
+  __$gc()
   Timer.stop(timer2)
+  __$gc()
   Timer.stop(timer)
+  __$gc()
   Handle.close(timer, () {
+    __$gc()
     print("close1")
+    __$gc()
   })
+  __$gc()
   Handle.close(timer2, () {
+    __$gc()
     print("close2")
+    __$gc()
   })
+  __$gc()
 })
+print("started0")
+__$gc()
+
+print("started1")
 
 Timer.start(timer2, 333, 333, () {
+  __$gc()
   print("onInterval")
+  __$gc()
   period = Timer.getRepeat(timer2)
+  __$gc()
   p("period", period)
+  __$gc()
   Timer.setRepeat(timer2, period / 1.2 + 1)
+  __$gc()
 })
+__$gc()
 
 p("timer", timer)
+__$gc()
 p("timer2", timer2)
+__$gc()
