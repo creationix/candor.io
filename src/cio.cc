@@ -43,5 +43,5 @@ static Value* Print(uint32_t argc, Arguments& argv) {
 }
 
 void cio_init(Object* global) {
-  global->Set(String::New("print", 5), Function::New(Print));
+  global->Set("print", Function::New(Print));
 }

@@ -10,7 +10,7 @@ using namespace candor;
 void luv_init(Object* global) {
   // Create a global args array.
   Object* uv = Object::New();
-  global->Set(String::New("uv", 2), uv);
+  global->Set("uv", uv);
 
   luv_handle_init(uv);
   luv_timer_init(uv);

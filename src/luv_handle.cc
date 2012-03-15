@@ -19,8 +19,8 @@ static Value* luv_close(uint32_t argc, Arguments& argv) {
 // Create the Handle object that wraps the C functions
 void luv_handle_init(Object* uv) {
   Object* handle = Object::New();
-  uv->Set(String::New("Handle", 6), handle);
-  handle->Set(String::New("close", 5), Function::New(luv_close));
+  uv->Set("Handle", handle);
+  handle->Set("close", Function::New(luv_close));
 }
 
 // Implement class methods.
