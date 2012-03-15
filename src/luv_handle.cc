@@ -27,12 +27,13 @@ void luv_handle_init(Object* uv) {
 
 void uvHandle::OnClose() {
   onClose->Call(0, NULL);
+  onClose.Unwrap();
   Unref();
 }
 
 Value* uvHandle::Close(uint32_t argc, Arguments& argv) {
   if (argc > 1 && argv[1]->Is<Function>()) {
-    onClose = argv[1]->As<Function>();
+    onClose.Wrap(argv[1]->As<Function>());
   }
   uv_close(&handle, luv_on_close);
   Ref();

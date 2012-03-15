@@ -8,7 +8,7 @@ namespace candorIO {
 
   class uvHandle : public CWrapper {
     uv_handle_t handle;
-    Function* onClose;
+    Handle<Function> onClose;
    public:
     void OnClose();
     Value* Close(uint32_t argc, Arguments& argv);

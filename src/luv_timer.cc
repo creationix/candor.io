@@ -69,7 +69,7 @@ Value* uvTimer::Start(uint32_t argc, Arguments& argv) {
   assert(argc == 4 && argv[1]->Is<Number>() && argv[2]->Is<Number>() && argv[3]->Is<Function>());
   int64_t timeout = argv[1]->As<Number>()->IntegralValue();
   int64_t repeat = argv[2]->As<Number>()->IntegralValue();
-  onTimer = argv[3]->As<Function>();
+  onTimer.Wrap(argv[3]->As<Function>());
   uv_timer_start(&handle, luv_on_timer, timeout, repeat);
   Ref();
   return Nil::New();
@@ -91,6 +91,7 @@ Value* uvTimer::SetRepeat(uint32_t argc, Arguments& argv) {
 Value* uvTimer::Stop(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
   uv_timer_stop(&handle);
+  onTimer.Unwrap();
   Unref();
   return Nil::New();
 }

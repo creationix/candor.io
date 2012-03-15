@@ -9,7 +9,7 @@ namespace candorIO {
 
   class uvTimer : public uvHandle {
     uv_timer_t handle;
-    Function* onTimer;
+    Handle<Function> onTimer;
    public:
     uvTimer();
     void OnTimer(int status);
