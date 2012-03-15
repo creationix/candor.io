@@ -1,6 +1,5 @@
 print = global.print
-Timer = global.uv.Timer
-Handle = global.uv.Handle
+uv = global.uv
 
 // Simple pretty printer
 dump(value) {
@@ -52,27 +51,27 @@ p(label, value) {
   print(label, dump(value))
 }
 
-p("Timer", Timer)
+p("uv", uv)
 
-timer = Timer.create()
+timer = uv.createTimer()
 __$gc()
-timer2 = Timer.create()
+timer2 = uv.createTimer()
 __$gc()
 
-Timer.start(timer, 2400, 0, () {
+timer.start(timer, 2400, 0, () {
   __$gc()
   print("onTimeout")
   __$gc()
-  Timer.stop(timer2)
   __$gc()
-  Timer.stop(timer)
+  timer2.stop(timer2)
+  timer.stop(timer)
   __$gc()
-  Timer.close(timer, () {
+  timer.close(timer, () {
     __$gc()
     print("close1")
   })
   __$gc()
-  Timer.close(timer2, () {
+  timer2.close(timer2, () {
     __$gc()
     print("close2")
   })
@@ -80,13 +79,13 @@ Timer.start(timer, 2400, 0, () {
 })
 __$gc()
 
-Timer.start(timer2, 333, 333, () {
+timer2.start(timer2, 333, 333, () {
   __$gc()
   print("onInterval")
-  period = Timer.getRepeat(timer2)
+  period = timer2.getRepeat(timer2)
   __$gc()
   p("period", period)
-  Timer.setRepeat(timer2, period / 1.2 + 1)
+  timer2.setRepeat(timer2, period / 1.2 + 1)
   __$gc()
 })
 __$gc()
