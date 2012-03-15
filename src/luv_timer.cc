@@ -40,6 +40,14 @@ static Value* luv_timer_set_repeat(uint32_t argc, Arguments& argv) {
   assert(argc && argv[0]->Is<CData>());
   return CWrapper::Unwrap<uvTimer>(argv[0])->SetRepeat(argc, argv);
 }
+static void luv_on_close(uv_handle_t* handle) {
+  (reinterpret_cast<uvTimer*>(handle->data))->OnClose();
+}
+static Value* luv_close(uint32_t argc, Arguments& argv) {
+  assert(argc && argv[0]->Is<CData>());
+  return CWrapper::Unwrap<uvTimer>(argv[0])->Close(argc, argv);
+}
+
 
 // Create the Timer object that wraps the C functions
 void luv_timer_init(Object* uv) {
@@ -51,6 +59,7 @@ void luv_timer_init(Object* uv) {
   timer->Set("again", Function::New(luv_timer_again));
   timer->Set("getRepeat", Function::New(luv_timer_get_repeat));
   timer->Set("setRepeat", Function::New(luv_timer_set_repeat));
+  timer->Set("close", Function::New(luv_close));
 }
 
 // Implement class methods.
@@ -99,5 +108,20 @@ Value* uvTimer::Stop(uint32_t argc, Arguments& argv) {
 Value* uvTimer::Again(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
   uv_timer_again(&handle);
+  return Nil::New();
+}
+
+void uvTimer::OnClose() {
+  onClose->Call(0, NULL);
+  onClose.Unwrap();
+  Unref();
+}
+
+Value* uvTimer::Close(uint32_t argc, Arguments& argv) {
+  if (argc > 1 && argv[1]->Is<Function>()) {
+    onClose.Wrap(argv[1]->As<Function>());
+  }
+  uv_close((uv_handle_t*)&handle, luv_on_close);
+  Ref();
   return Nil::New();
 }

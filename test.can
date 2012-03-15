@@ -67,12 +67,12 @@ Timer.start(timer, 2400, 0, () {
   __$gc()
   Timer.stop(timer)
   __$gc()
-  Handle.close(timer, () {
+  Timer.close(timer, () {
     __$gc()
     print("close1")
   })
   __$gc()
-  Handle.close(timer2, () {
+  Timer.close(timer2, () {
     __$gc()
     print("close2")
   })
