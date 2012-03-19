@@ -69,7 +69,9 @@ uvTimer::uvTimer() {
 }
 
 void uvTimer::OnTimer(int status) {
-  onTimer->Call(0, NULL);
+  Value* argv[1];
+  argv[0] = Number::NewIntegral(status);
+  onTimer->Call(1, argv);
 }
 
 Value* uvTimer::Start(uint32_t argc, Arguments& argv) {
@@ -78,9 +80,9 @@ Value* uvTimer::Start(uint32_t argc, Arguments& argv) {
   int64_t timeout = argv[1]->As<Number>()->IntegralValue();
   int64_t repeat = argv[2]->As<Number>()->IntegralValue();
   onTimer.Wrap(argv[3]->As<Function>());
-  uv_timer_start(&handle, luv_on_timer, timeout, repeat);
+  int status = uv_timer_start(&handle, luv_on_timer, timeout, repeat);
   Ref();
-  return Nil::New();
+  return Number::NewIntegral(status);
 }
 
 Value* uvTimer::GetRepeat(uint32_t argc, Arguments& argv) {
@@ -98,16 +100,16 @@ Value* uvTimer::SetRepeat(uint32_t argc, Arguments& argv) {
 
 Value* uvTimer::Stop(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
-  uv_timer_stop(&handle);
+  int status = uv_timer_stop(&handle);
   onTimer.Unwrap();
   Unref();
-  return Nil::New();
+  return Number::NewIntegral(status);
 }
 
 Value* uvTimer::Again(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
-  uv_timer_again(&handle);
-  return Nil::New();
+  int status = uv_timer_again(&handle);
+  return Number::NewIntegral(status);
 }
 
 void uvTimer::OnClose() {

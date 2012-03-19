@@ -152,16 +152,16 @@ uvTcp::uvTcp() {
 Value* uvTcp::Nodelay(uint32_t argc, Arguments& argv) {
   assert(argc == 2 && argv[1]->Is<Boolean>());
   int nodelay = argv[1]->ToBoolean()->IsTrue();
-  uv_tcp_nodelay(&handle, nodelay);
-  return Nil::New();
+  int status = uv_tcp_nodelay(&handle, nodelay);
+  return Number::NewIntegral(status);
 }
 
 Value* uvTcp::Keepalive(uint32_t argc, Arguments& argv) {
   assert(argc == 3 && argv[1]->Is<Boolean>() && argv[2]->Is<Number>());
   int keepalive = argv[1]->ToBoolean()->IsTrue();
   unsigned int delay = argv[2]->ToNumber()->IntegralValue();
-  uv_tcp_keepalive(&handle, keepalive, delay);
-  return Nil::New();
+  int status = uv_tcp_keepalive(&handle, keepalive, delay);
+  return Number::NewIntegral(status);
 }
 
 Value* uvTcp::Bind(uint32_t argc, Arguments& argv) {
@@ -169,8 +169,8 @@ Value* uvTcp::Bind(uint32_t argc, Arguments& argv) {
   const char* host = argv[1]->ToString()->Value();
   int port = argv[2]->ToNumber()->IntegralValue();
   struct sockaddr_in address = uv_ip4_addr(host, port);
-  uv_tcp_bind(&handle, address);
-  return Nil::New();
+  int status = uv_tcp_bind(&handle, address);
+  return Number::NewIntegral(status);
 }
 
 Value* uvTcp::Getsockname(uint32_t argc, Arguments& argv) {
@@ -182,7 +182,10 @@ Value* uvTcp::Getsockname(uint32_t argc, Arguments& argv) {
   struct sockaddr_storage address;
   int addrlen = sizeof(address);
 
-  uv_tcp_getsockname(&handle, (struct sockaddr*)(&address), &addrlen);
+  int status = uv_tcp_getsockname(&handle, (struct sockaddr*)(&address), &addrlen);
+  if (status) {
+    return Number::NewIntegral(status);
+  }
 
   family = address.ss_family;
   if (family == AF_INET) {
@@ -197,7 +200,6 @@ Value* uvTcp::Getsockname(uint32_t argc, Arguments& argv) {
 
   Object* obj = Object::New();
   obj->Set("port", Number::NewIntegral(port));
-  obj->Set("family", Number::NewIntegral(family));
   obj->Set("address", String::New(ip));
 
   return obj;
@@ -212,7 +214,10 @@ Value* uvTcp::Getpeername(uint32_t argc, Arguments& argv) {
   struct sockaddr_storage address;
   int addrlen = sizeof(address);
 
-  uv_tcp_getpeername(&handle, (struct sockaddr*)(&address), &addrlen);
+  int status = uv_tcp_getpeername(&handle, (struct sockaddr*)(&address), &addrlen);
+  if (status) {
+    return Number::NewIntegral(status);
+  }
 
   family = address.ss_family;
   if (family == AF_INET) {
@@ -227,7 +232,6 @@ Value* uvTcp::Getpeername(uint32_t argc, Arguments& argv) {
 
   Object* obj = Object::New();
   obj->Set("port", Number::NewIntegral(port));
-  obj->Set("family", Number::NewIntegral(family));
   obj->Set("address", String::New(ip));
 
   return obj;
@@ -247,13 +251,15 @@ Value* uvTcp::Connect(uint32_t argc, Arguments& argv) {
   struct sockaddr_in address = uv_ip4_addr(host, port);
   uv_connect_t* req = (uv_connect_t*)malloc(sizeof(uv_connect_t));
   req->data = this;
-  uv_tcp_connect(req, &handle, address, luv_on_connect);
+  int status = uv_tcp_connect(req, &handle, address, luv_on_connect);
   Ref();
-  return Nil::New();
+  return Number::NewIntegral(status);
 }
 
 void uvTcp::OnShutdown(int status) {
-  onShutdown->Call(0, NULL);
+  Value* argv[1];
+  argv[0] = Number::NewIntegral(status);
+  onShutdown->Call(1, argv);
   onShutdown.Unwrap();
   Unref();
 }
@@ -264,13 +270,15 @@ Value* uvTcp::Shutdown(uint32_t argc, Arguments& argv) {
   }
   uv_shutdown_t* req = (uv_shutdown_t*)malloc(sizeof(uv_shutdown_t));
   req->data = this;
-  uv_shutdown(req, (uv_stream_t*)&handle, luv_on_shutdown);
+  int status = uv_shutdown(req, (uv_stream_t*)&handle, luv_on_shutdown);
   Ref();
-  return Nil::New();
+  return Number::NewIntegral(status);
 }
 
 void uvTcp::OnConnection(int status) {
-  onConnection->Call(0, NULL);
+  Value* argv[1];
+  argv[0] = Number::NewIntegral(status);
+  onConnection->Call(1, argv);
   // TODO: unref and unwrap, but not here, this is repeating
 }
 
@@ -278,16 +286,16 @@ Value* uvTcp::Listen(uint32_t argc, Arguments& argv) {
   assert(argc == 3 && argv[1]->Is<Number>() && argv[2]->Is<Function>());
   onConnection.Wrap(argv[2]->As<Function>());
   int backlog = argv[1]->ToNumber()->IntegralValue();
-  uv_listen((uv_stream_t*)&handle, backlog, luv_on_connection);
+  int status = uv_listen((uv_stream_t*)&handle, backlog, luv_on_connection);
   Ref();
-  return Nil::New();
+  return Number::NewIntegral(status);
 }
 
 Value* uvTcp::Accept(uint32_t argc, Arguments& argv) {
   assert(argc == 2 && argv[1]->Is<CData>());
-  uv_stream_t* client = (uv_stream_t*)argv[1]->As<CData>()->GetContents();
-  uv_accept((uv_stream_t*)&handle, client);
-  return Nil::New();
+  uvTcp* client = CWrapper::Unwrap<uvTcp>(argv[1]);
+  int status = uv_accept((uv_stream_t*)&handle, (uv_stream_t*)&(client->handle));
+  return Number::NewIntegral(status);
 }
 
 void uvTcp::OnRead(ssize_t nread, uv_buf_t buf) {
@@ -300,22 +308,25 @@ void uvTcp::OnRead(ssize_t nread, uv_buf_t buf) {
 Value* uvTcp::ReadStart(uint32_t argc, Arguments& argv) {
   assert(argc == 2 && argv[1]->Is<Function>());
   onRead.Wrap(argv[1]->As<Function>());
-  uv_read_start((uv_stream_t*)&handle, luv_on_alloc, luv_on_read);
+  int status = uv_read_start((uv_stream_t*)&handle, luv_on_alloc, luv_on_read);
   Ref();
-  return Nil::New();
+  return Number::NewIntegral(status);
 }
 
 Value* uvTcp::ReadStop(uint32_t argc, Arguments& argv) {
   assert(argc == 1);
-  uv_read_stop((uv_stream_t*)&handle);
+  int status = uv_read_stop((uv_stream_t*)&handle);
   onRead.Unwrap();
   Unref();
-  return Nil::New();
+  return Number::NewIntegral(status);
 }
 
 void uvTcp::OnWrite(int status) {
   printf("onWrite");
   // TODO call write callback if there is one
+  // Value* argv[1];
+  // argv[0] = Number::NewIntegral(status);
+  // onWrite->Call(1, argv);
   // memory managent probably needs to happen too.
 }
 
@@ -331,8 +342,8 @@ Value* uvTcp::Write(uint32_t argc, Arguments& argv) {
   }
   uv_write_t* req = (uv_write_t*)malloc(sizeof(uv_write_t));
   req->data = this;
-  uv_write(req, (uv_stream_t*)&handle, &buf, 1, luv_on_write);
-  return Nil::New();
+  int status = uv_write(req, (uv_stream_t*)&handle, &buf, 1, luv_on_write);
+  return Number::NewIntegral(status);
 }
 
 Value* uvTcp::IsReadable(uint32_t argc, Arguments& argv) {

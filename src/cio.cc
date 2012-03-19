@@ -42,6 +42,16 @@ static Value* Print(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
+static Value* Exit(uint32_t argc, Arguments& argv) {
+  int status = 0;
+  if (argc) {
+    status = argv[0]->ToNumber()->IntegralValue();
+  }
+  exit(status);
+  return Nil::New();
+}
+
 void cio_init(Object* global) {
   global->Set("print", Function::New(Print));
+  global->Set("exit", Function::New(Exit));
 }

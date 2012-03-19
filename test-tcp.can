@@ -51,11 +51,29 @@ p(label, value) {
   print(label, dump(value))
 }
 
+// Used to emit on errors when libuv badness happens
+check(status) {
+  if (status) {
+    err = global.uv.lastError()
+    print(err.name + ": " + err.error)
+    global.exit()
+  }
+}
+
 p("Tcp", Tcp)
 
 server = Tcp.create()
-
-p("server", server)
-Tcp.close(server, () {
-  print("onClose")
+check(Tcp.bind(server, "0.0.0.0", 8080))
+if (err) print(err)
+Tcp.listen(server, 128, () {
+  client = Tcp.create()
+  Tcp.accept(server, client)
+  print("on connection")
+  p("sockname", Tcp.getsockname(client))
+  p("peername", Tcp.getpeername(client))
+  Tcp.readStart(client, (chunk) {
+    p("onChunk", chunk)
+    Tcp.write(client, chunk)
+  })
 })
+

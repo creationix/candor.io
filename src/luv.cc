@@ -12,6 +12,7 @@ void luv_init(Object* global) {
   Object* uv = Object::New();
   global->Set("uv", uv);
 
+  luv_misc_init(uv);
   luv_timer_init(uv);
   luv_tcp_init(uv);
 
