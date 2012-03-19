@@ -61,8 +61,8 @@ int main(int argc, char** argv) {
   Function* code = Function::New(script, size);
   delete script;
 
-  if (isolate.HasSyntaxError()) {
-    isolate.PrintSyntaxError();
+  if (isolate.HasError()) {
+    isolate.PrintError();
     exit(1);
   }
 
