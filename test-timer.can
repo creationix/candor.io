@@ -1,94 +1,30 @@
 print = global.print
 Timer = global.uv.Timer
 
-// Simple pretty printer
-dump(value) {
-  type = typeof value
-  if (type == "nil") {
-    return "nil"
-  }
-  if (type == "boolean" || type == "number") {
-    return "" + value
-  }
-  if (type == "string") {
-    return '"' + value + '"'
-  }
-  if (type == "object") {
-    keys = keysof value
-    length = sizeof keys
-    i = 0
-    escaped = "{ "
-    while (i < length) {
-      key = keys[i]
-      part = dump(value[key])
-      escaped = escaped + key + ": " + part
-      if (i < length - 1) {
-        escaped = escaped + ", "
-      }
-      i++
-    }
-    return escaped + " }"
-  }
-  if (type == "array") {
-    length = sizeof value
-    i = 0
-    escaped = "[ "
-    while (i < length) {
-      escaped = escaped + dump(value[i])
-      print(escaped)
-      if (i < length - 1) {
-        escaped = escaped + ", "
-      }
-      i++
-    }
-    return escaped + " ]"
-  }
-  return "[" + type + "]"
-}
-
-// Quick and dirty pretty printer
-p(label, value) {
-  print(label, dump(value))
-}
-
-p("Timer", Timer)
-
 timer = Timer.create()
-__$gc()
 timer2 = Timer.create()
-__$gc()
 
 Timer.start(timer, 2400, 0, () {
-  __$gc()
   print("onTimeout")
-  __$gc()
   Timer.stop(timer2)
-  __$gc()
   Timer.stop(timer)
-  __$gc()
   Timer.close(timer, () {
-    __$gc()
-    print("close1")
+    // Can't use `print` here, it's not a function, have to use `global.print`
+    global.print("close1", print)
   })
-  __$gc()
   Timer.close(timer2, () {
-    __$gc()
-    print("close2")
+    // Can't use `print` here, it's not a function, have to use `global.print`
+    global.print("close2", print)
   })
-  __$gc()
 })
-__$gc()
 
 Timer.start(timer2, 333, 333, () {
-  __$gc()
+  Timer = global.uv.Timer
   print("onInterval")
   period = Timer.getRepeat(timer2)
-  __$gc()
-  p("period", period)
+  print("period", period)
   Timer.setRepeat(timer2, period / 1.2 + 1)
-  __$gc()
 })
-__$gc()
 
-p("timer", timer)
-p("timer2", timer2)
+print("timer", timer)
+print("timer2", timer2)

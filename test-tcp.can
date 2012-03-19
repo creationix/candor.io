@@ -1,8 +1,7 @@
 print = global.print
-Tcp = global.uv.Tcp
 
 // Simple pretty printer
-dump(value) {
+dump = (value) {
   type = typeof value
   if (type == "nil") {
     return "nil"
@@ -47,33 +46,82 @@ dump(value) {
 }
 
 // Quick and dirty pretty printer
-p(label, value) {
+p = (label, value) {
   print(label, dump(value))
 }
 
+throw = (err) {
+  print(err.name + ": " + err.error)
+  global.exit()
+}
+
 // Used to emit on errors when libuv badness happens
-check(status) {
+check = (status) {
   if (status) {
-    err = global.uv.lastError()
-    print(err.name + ": " + err.error)
-    global.exit()
+    throw(global.uv.lastError())
   }
 }
 
-p("Tcp", Tcp)
+Tcp = global.uv.Tcp
 
+p("Tcp", Tcp)
 server = Tcp.create()
 check(Tcp.bind(server, "0.0.0.0", 8080))
 if (err) print(err)
-Tcp.listen(server, 128, () {
-  client = Tcp.create()
-  Tcp.accept(server, client)
-  print("on connection")
-  p("sockname", Tcp.getsockname(client))
-  p("peername", Tcp.getpeername(client))
-  Tcp.readStart(client, (chunk) {
-    p("onChunk", chunk)
-    Tcp.write(client, chunk)
-  })
-})
 
+onConnection = (client) {
+  print("onConnection")
+
+  check(Tcp.readStart(client, (nread, chunk) {
+    print = global.print
+    print("onChunk", nread)
+    if (nread == -1) {
+      err = global.uv.lastError()
+      if (err.name == "EOF") {
+        print("EOF")
+        Tcp = global.uv.Tcp
+        print("client", client)
+        Tcp.shutdown(client, () {
+          print = global.print
+          Tcp = global.uv.Tcp
+          print("shutdown")
+          print("client", client)
+          Tcp.close(client, () {
+            print = global.print
+            print("closed")
+
+          })  
+        })
+      } else {
+        throw(err)
+      }
+      return
+    }
+    if (nread > 0) {
+      len = sizeof chunk
+      i = 0
+      while (i < len) {
+        obj = {}
+        obj.time = global.String.readUInt32(chunk, i)
+        i = i + 4
+        obj.value = global.String.readInt16(chunk, i)
+        i = i + 2
+        obj.type = global.String.readUInt8(chunk, i)
+        i++
+        obj.number = global.String.readUInt8(chunk, i)
+        i++
+        p("obj", obj)
+      }
+      // Tcp = global.uv.Tcp
+      // Tcp.write(client, chunk)
+      return
+    }
+  }))
+
+}
+
+check(Tcp.listen(server, 128, () {
+  client = Tcp.create()
+  check(Tcp.accept(server, client))
+  onConnection(client)
+}))
