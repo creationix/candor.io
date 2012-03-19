@@ -1,6 +1,5 @@
 print = global.print
 Timer = global.uv.Timer
-Handle = global.uv.Handle
 
 // Simple pretty printer
 dump(value) {

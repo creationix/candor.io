@@ -2,7 +2,6 @@
 #include "candor.h"
 #include "uv.h"
 #include "luv.h"
-#include "luv_handle.h"
 #include "luv_timer.h"
 
 #include <stdio.h>
