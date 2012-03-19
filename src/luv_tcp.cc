@@ -301,7 +301,11 @@ Value* uvTcp::Accept(uint32_t argc, Arguments& argv) {
 void uvTcp::OnRead(ssize_t nread, uv_buf_t buf) {
   Value* argv[2];
   argv[0] = Number::NewIntegral(nread);
-  argv[1] = String::New(buf.base, buf.len);
+  if (nread > 0) {
+    argv[1] = String::New(buf.base, nread);
+  } else {
+    argv[1] = Nil::New();
+  }
   onRead->Call(2, argv);
 }
 
@@ -322,7 +326,7 @@ Value* uvTcp::ReadStop(uint32_t argc, Arguments& argv) {
 }
 
 void uvTcp::OnWrite(int status) {
-  printf("onWrite");
+  printf("TODO: Implement uvTcp::OnWrite\n");
   // TODO call write callback if there is one
   // Value* argv[1];
   // argv[0] = Number::NewIntegral(status);
@@ -333,16 +337,18 @@ void uvTcp::OnWrite(int status) {
 Value* uvTcp::Write(uint32_t argc, Arguments& argv) {
   assert(argc >= 2 && argv[1]->Is<String>());
   String* str = argv[1]->As<String>();
-  uv_buf_t buf;
-  // TODO: this typecast it probably not safe at all
-  buf.base = (char*)str->Value();
-  buf.len = str->Length();
+  uv_buf_t* buf = (uv_buf_t*)malloc(sizeof(uv_buf_t));
+  uint32_t len = str->Length();
+  const char* chunk = str->Value();
+  buf->len = len;
+  buf->base = (char*)chunk;
+  // strncpy(buf->base, str->Value(), buf->len);
   if (argc > 2 && argv[2]->Is<Function>()) {
     // Store callback somehow    
   }
   uv_write_t* req = (uv_write_t*)malloc(sizeof(uv_write_t));
   req->data = this;
-  int status = uv_write(req, (uv_stream_t*)&handle, &buf, 1, luv_on_write);
+  int status = uv_write(req, (uv_stream_t*)&handle, buf, 1, luv_on_write);
   return Number::NewIntegral(status);
 }
 
