@@ -74,7 +74,6 @@ onConnection = (client) {
 
   check(Tcp.readStart(client, (nread, chunk) {
     print = global.print
-    print("onChunk", nread)
     if (nread == -1) {
       err = global.uv.lastError()
       if (err.name == "EOF") {
@@ -89,7 +88,6 @@ onConnection = (client) {
           Tcp.close(client, () {
             print = global.print
             print("closed")
-
           })  
         })
       } else {
@@ -98,22 +96,9 @@ onConnection = (client) {
       return
     }
     if (nread > 0) {
-      len = sizeof chunk
-      i = 0
-      while (i < len) {
-        obj = {}
-        obj.time = global.String.readUInt32(chunk, i)
-        i = i + 4
-        obj.value = global.String.readInt16(chunk, i)
-        i = i + 2
-        obj.type = global.String.readUInt8(chunk, i)
-        i++
-        obj.number = global.String.readUInt8(chunk, i)
-        i++
-        p("obj", obj)
-      }
-      // Tcp = global.uv.Tcp
-      // Tcp.write(client, chunk)
+      print("Echoing", chunk)
+      Tcp = global.uv.Tcp
+      Tcp.write(client, chunk)
       return
     }
   }))
