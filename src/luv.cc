@@ -3,6 +3,7 @@
 #include "uv.h"
 #include "luv_misc.h"
 #include "luv_timer.h"
+#include "luv_tcp.h"
 
 using namespace candor;
 
@@ -12,5 +13,6 @@ void luv_init(Object* global) {
   global->Set("uv", uv);
 
   luv_timer_init(uv);
+  luv_tcp_init(uv);
 
 }
