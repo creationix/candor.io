@@ -307,6 +307,7 @@ void uvTcp::OnRead(ssize_t nread, uv_buf_t buf) {
     argv[1] = Nil::New();
   }
   onRead->Call(2, argv);
+  free(buf.base);
 }
 
 Value* uvTcp::ReadStart(uint32_t argc, Arguments& argv) {
