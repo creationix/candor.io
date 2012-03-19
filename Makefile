@@ -11,6 +11,7 @@ DEPS=${CANDIR}/candor.a  \
 
 LIBS=build/main.o       \
      build/cio.o        \
+     build/cio_string.o \
      build/luv.o        \
      build/luv_misc.o   \
      build/luv_tcp.o    \

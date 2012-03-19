@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "cio_string.h"
 
 using namespace candor;
 
@@ -54,4 +55,5 @@ static Value* Exit(uint32_t argc, Arguments& argv) {
 void cio_init(Object* global) {
   global->Set("print", Function::New(Print));
   global->Set("exit", Function::New(Exit));
+  cio_string_init(global);
 }
