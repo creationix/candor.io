@@ -1,10 +1,10 @@
 require = global.require
-
+p = global.prettyPrint
 print = global.print
 
 
 throw = (err) {
-  print(err.name + ": " + err.error)
+  p(err)
   global.exit()
 }
 
@@ -17,4 +17,4 @@ check = (status) {
 
 
 url = "http://candor.io:8080/foo/bar/baz.zip?magic=yes#instant"
-p("parsed", global.HttpParser.parseUrl(url))
+p("parsed", require('http_parser').parseUrl(url))

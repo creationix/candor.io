@@ -1,4 +1,5 @@
 print = global.print
+p = global.prettyPrint
 
 Rectangle = {}
 Rectangle.getArea = (self) {
@@ -8,17 +9,21 @@ Rectangle.initialize = (self, w, h) {
   self.w = w
   self.h = h
 }
+p("Rectangle", Rectangle)
 
 Square = new Rectangle
 Square.initialize = (self, s) {
   self.w = s
   self.h = s
 }
+p("Square", Square)
 
 rect = new Rectangle
 rect:initialize(3, 5)
-print("Rectangle 3x5 =", rect:getArea())
+p("rect", rect)
+print("Rectangle 3x5 = " + rect:getArea())
 
 square = new Square
 square:initialize(4)
-print("Square 4x4 =", square:getArea())
+p("square", square)
+print("Square 4x4 = " + square:getArea())
