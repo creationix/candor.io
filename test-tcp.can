@@ -1,86 +1,37 @@
 print = global.print
-
-// Simple pretty printer
-dump = (value) {
-  type = typeof value
-  if (type == "nil") {
-    return "nil"
-  }
-  if (type == "boolean" || type == "number") {
-    return "" + value
-  }
-  if (type == "string") {
-    return '"' + value + '"'
-  }
-  if (type == "object") {
-    keys = keysof value
-    length = sizeof keys
-    i = 0
-    escaped = "{ "
-    while (i < length) {
-      key = keys[i]
-      part = dump(value[key])
-      escaped = escaped + key + ": " + part
-      if (i < length - 1) {
-        escaped = escaped + ", "
-      }
-      i++
-    }
-    return escaped + " }"
-  }
-  if (type == "array") {
-    length = sizeof value
-    i = 0
-    escaped = "[ "
-    while (i < length) {
-      escaped = escaped + dump(value[i])
-      print(escaped)
-      if (i < length - 1) {
-        escaped = escaped + ", "
-      }
-      i++
-    }
-    return escaped + " ]"
-  }
-  return "[" + type + "]"
-}
-
-// Quick and dirty pretty printer
-p = (label, value) {
-  print(label, dump(value))
-}
+p = global.prettyPrint
+require = global.require
 
 throw = (err) {
-  print(err.name + ": " + err.error)
+  p(err)
   global.exit()
 }
 
 // Used to emit on errors when libuv badness happens
 check = (status) {
   if (status) {
-    throw(global.uv.lastError())
+    throw(require('uv').lastError())
   }
 }
 
-Tcp = global.uv.Tcp
+Tcp = require('tcp')
 
 p("Tcp", Tcp)
 server = Tcp.create()
 check(Tcp.bind(server, "0.0.0.0", 8080))
-if (err) print(err)
 
 onConnection = (client) {
-  print("onConnection")
+  p("onConnection")
 
   check(Tcp.readStart(client, (nread, chunk) {
     if (nread == -1) {
       err = global.uv.lastError()
       if (err.name == "EOF") {
-        print("EOF")
+        p("EOF")
         Tcp.shutdown(client, () {
-          print("shutdown")
+          p("shutdown")
           Tcp.close(client, () {
-            print("closed")
+            p("closed")
           })  
         })
       } else {
@@ -89,7 +40,7 @@ onConnection = (client) {
       return
     }
     if (nread > 0) {
-      print("Echoing", chunk)
+      p("Echoing", chunk)
       Tcp.write(client, chunk)
       return
     }
@@ -102,3 +53,4 @@ check(Tcp.listen(server, 128, () {
   check(Tcp.accept(server, client))
   onConnection(client)
 }))
+print("TCP echo server listening on port 8080")

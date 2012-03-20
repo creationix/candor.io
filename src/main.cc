@@ -1,13 +1,18 @@
-#include <stdio.h>
-#include <stdlib.h>
-
+// Needed for APIs used in this file
 #include "candor.h"
 #include "uv.h"
+// Our own header
 #include "main.h"
+// The base system
 #include "cio.h"
+// Addon modules
+#include "cio_string.h"
 #include "luv.h"
+#include "luv_tcp.h"
+#include "luv_timer.h"
 #include "lhttp_parser.h"
 
+// Grab some C libraries
 #include <stdio.h> // fprintf
 #include <stdlib.h> // abort
 #include <unistd.h> // open, lseek
@@ -58,7 +63,6 @@ int main(int argc, char** argv) {
   // Load script and run
   off_t size = 0;
   const char* script = ReadContents(argv[1], &size);
-
   Function* code = Function::New(script, size);
   delete script;
 
@@ -70,18 +74,18 @@ int main(int argc, char** argv) {
 
   // Create a global context
   Handle<Object> global(Object::New());
+  // Inject cio module into global scope, it returns an object where we need
+  // to store all module creation functions.
+  Object* builtins = cio_init(*global);
 
-  // Inject cio module into global scope
-  cio_init(*global);
-
-  // Inject uv module into global scope
-  luv_init(*global);
-
-  // Inject http_parser
-  lhttp_parser_init(*global);
+  // Store other native modules for lazy-loading
+  builtins->Set("string", Function::New(cio_string_module));
+  builtins->Set("uv", Function::New(uv_base_module));
+  builtins->Set("timer", Function::New(uv_timer_module));
+  builtins->Set("tcp", Function::New(uv_tcp_module));
+  builtins->Set("http_parser", Function::New(http_parser_module));
 
   code->SetContext(*global);
-
   code->Call(0, NULL);
 
   // Start the libuv event loop

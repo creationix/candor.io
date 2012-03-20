@@ -23,6 +23,6 @@ namespace candorIO {
 }
 
 
-void lhttp_parser_init(Object* global);
+Value* http_parser_module(uint32_t argc, Arguments& argv);
 
 #endif

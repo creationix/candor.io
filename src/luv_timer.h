@@ -27,6 +27,6 @@ namespace candorIO {
   };
 }
 
-void luv_timer_init(Object* uv);
+Value* uv_timer_module(uint32_t argc, Arguments& argv);
 
 #endif

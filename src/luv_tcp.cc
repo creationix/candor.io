@@ -118,9 +118,8 @@ static Value* luv_close(uint32_t argc, Arguments& argv) {
 }
 
 // Create the Timer object that wraps the C functions
-void luv_tcp_init(Object* uv) {
+Value* uv_tcp_module(uint32_t argc, Arguments& argv) {
   Object* tcp = Object::New();
-  uv->Set("Tcp", tcp);
   tcp->Set("create", Function::New(luv_create_tcp));
 
   tcp->Set("nodelay", Function::New(luv_tcp_nodelay));
@@ -140,6 +139,7 @@ void luv_tcp_init(Object* uv) {
   tcp->Set("isWritable", Function::New(luv_is_writable));
 
   tcp->Set("close", Function::New(luv_close));
+  return tcp;
 }
 
 // Implement class methods.

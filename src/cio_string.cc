@@ -68,9 +68,10 @@ static Value* readInt64(uint32_t argc, Arguments& argv) {
 }
 
 
-void cio_string_init(Object* global) {
+Value* cio_string_module(uint32_t argc, Arguments& argv) {
   Object* string = Object::New();
-  global->Set("String", string);
+  // These match the endianess of the host.
+  // TODO: add functions using explicit endianess
   string->Set("readUInt8", Function::New(readUInt8));
   string->Set("readInt8", Function::New(readInt8));
   string->Set("readUInt16", Function::New(readUInt16));
@@ -79,4 +80,5 @@ void cio_string_init(Object* global) {
   string->Set("readInt32", Function::New(readInt32));
   string->Set("readUInt64", Function::New(readUInt64));
   string->Set("readInt64", Function::New(readInt64));
+  return string;
 }

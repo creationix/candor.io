@@ -28,6 +28,6 @@ enum kTYPE {
   kPROCESS  = isHANDLE | isPROCESS
 };
 
-void luv_init(Object* global);
+Value* uv_base_module(uint32_t argc, Arguments& argv);
 
 #endif

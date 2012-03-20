@@ -4,6 +4,6 @@
 #include "candor.h"
 using namespace candor;
 
-void cio_string_init(Object* global);
+Value* cio_string_module(uint32_t argc, Arguments& argv);
 
 #endif

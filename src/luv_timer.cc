@@ -49,9 +49,8 @@ static Value* luv_close(uint32_t argc, Arguments& argv) {
 
 
 // Create the Timer object that wraps the C functions
-void luv_timer_init(Object* uv) {
+Value* uv_timer_module(uint32_t argc, Arguments& argv) {
   Object* timer = Object::New();
-  uv->Set("Timer", timer);
   timer->Set("create", Function::New(luv_create_timer));
   timer->Set("start", Function::New(luv_timer_start));
   timer->Set("stop", Function::New(luv_timer_stop));
@@ -59,6 +58,7 @@ void luv_timer_init(Object* uv) {
   timer->Set("getRepeat", Function::New(luv_timer_get_repeat));
   timer->Set("setRepeat", Function::New(luv_timer_set_repeat));
   timer->Set("close", Function::New(luv_close));
+  return timer;
 }
 
 // Implement class methods.

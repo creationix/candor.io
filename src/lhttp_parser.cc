@@ -5,8 +5,10 @@
 #include <string.h>
 #include <stdio.h>
 
-http_parser_settings settings;
+using namespace candor;
 using namespace candorIO;
+
+static http_parser_settings settings;
 
 static int lhttp_on_message_begin(http_parser* parser) {
   return (reinterpret_cast<HttpParser*>(parser->data))->Emit("messageBegin");
@@ -90,8 +92,7 @@ static Value* lhttp_parse_url(uint32_t argc, Arguments& argv) {
   return url;
 }
 
-void lhttp_parser_init(Object* global) {
-
+Value* http_parser_module(uint32_t argc, Arguments& argv) {
   // Initialize the settings
   settings.on_message_begin = lhttp_on_message_begin;
   settings.on_url = lhttp_on_url;
@@ -101,15 +102,14 @@ void lhttp_parser_init(Object* global) {
   settings.on_body = lhttp_on_body;
   settings.on_message_complete = lhttp_on_message_complete;
 
-  Object* http_parser = Object::New();
-  global->Set("HttpParser", http_parser);
-  http_parser->Set("parseUrl", Function::New(lhttp_parse_url));
-  http_parser->Set("create", Function::New(lhttp_create));
-  http_parser->Set("init", Function::New(lhttp_init));
-  http_parser->Set("execute", Function::New(lhttp_execute));
-  http_parser->Set("finish", Function::New(lhttp_finish));
-  http_parser->Set("pause", Function::New(lhttp_pause));
-
+  Object* module = Object::New();
+  module->Set("parseUrl", Function::New(lhttp_parse_url));
+  module->Set("create", Function::New(lhttp_create));
+  module->Set("init", Function::New(lhttp_init));
+  module->Set("execute", Function::New(lhttp_execute));
+  module->Set("finish", Function::New(lhttp_finish));
+  module->Set("pause", Function::New(lhttp_pause));
+  return module;
 }
 
 

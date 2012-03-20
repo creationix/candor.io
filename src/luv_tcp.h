@@ -45,6 +45,6 @@ namespace candorIO {
   };
 }
 
-void luv_tcp_init(Object* uv);
+Value* uv_tcp_module(uint32_t argc, Arguments& argv);
 
 #endif

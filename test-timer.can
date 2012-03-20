@@ -1,28 +1,31 @@
 print = global.print
-Timer = global.uv.Timer
+p = global.prettyPrint
+require = global.require
+
+Timer = require('timer')
+p("Timer", Timer)
 
 timer = Timer.create()
 timer2 = Timer.create()
 
 Timer.start(timer, 2400, 0, () {
-  print("onTimeout")
+  p("onTimeout", timer)
   Timer.stop(timer2)
   Timer.stop(timer)
   Timer.close(timer, () {
-    print("close1")
+    p("close", timer)
   })
   Timer.close(timer2, () {
-    print("close2")
+    p("close2", timer2)
   })
 })
 
 Timer.start(timer2, 333, 333, () {
-  Timer = global.uv.Timer
-  print("onInterval")
+  p("onInterval", timer2)
   period = Timer.getRepeat(timer2)
-  print("period", period)
+  p("period", period)
   Timer.setRepeat(timer2, period / 1.2 + 1)
 })
 
-print("timer", timer)
-print("timer2", timer2)
+p("timer", timer)
+p("timer2", timer2)
