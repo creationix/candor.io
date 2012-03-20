@@ -157,7 +157,6 @@ Object* cio_init(Object* global) {
   global->Set("require", Function::New(LoadBuiltin));
   builtins = Object::New();
   builtinCache = Object::New();
-  global->Set("builtins", builtins);
   // Make the objects persistent
   new Handle<Object>(builtins);
   new Handle<Object>(builtinCache);
