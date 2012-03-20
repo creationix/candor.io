@@ -6,6 +6,7 @@
 #include "main.h"
 #include "cio.h"
 #include "luv.h"
+#include "lhttp_parser.h"
 
 #include <stdio.h> // fprintf
 #include <stdlib.h> // abort
@@ -76,6 +77,9 @@ int main(int argc, char** argv) {
   // Inject uv module into global scope
   luv_init(*global);
 
+  // Inject http_parser
+  lhttp_parser_init(*global);
+
   code->SetContext(*global);
 
   code->Call(0, NULL);
@@ -85,3 +89,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+

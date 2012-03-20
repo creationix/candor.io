@@ -4,3 +4,6 @@
 [submodule "deps/candor"]
 	path = deps/candor
 	url = https://github.com/indutny/candor.git
+[submodule "deps/http-parser"]
+	path = deps/http-parser
+	url = https://github.com/joyent/http-parser.git
