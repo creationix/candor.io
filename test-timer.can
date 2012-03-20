@@ -9,12 +9,10 @@ Timer.start(timer, 2400, 0, () {
   Timer.stop(timer2)
   Timer.stop(timer)
   Timer.close(timer, () {
-    // Can't use `print` here, it's not a function, have to use `global.print`
-    global.print("close1", print)
+    print("close1")
   })
   Timer.close(timer2, () {
-    // Can't use `print` here, it's not a function, have to use `global.print`
-    global.print("close2", print)
+    print("close2")
   })
 })
 

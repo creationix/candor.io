@@ -73,20 +73,13 @@ onConnection = (client) {
   print("onConnection")
 
   check(Tcp.readStart(client, (nread, chunk) {
-    print = global.print
     if (nread == -1) {
       err = global.uv.lastError()
       if (err.name == "EOF") {
         print("EOF")
-        Tcp = global.uv.Tcp
-        print("client", client)
         Tcp.shutdown(client, () {
-          print = global.print
-          Tcp = global.uv.Tcp
           print("shutdown")
-          print("client", client)
           Tcp.close(client, () {
-            print = global.print
             print("closed")
           })  
         })
@@ -97,7 +90,6 @@ onConnection = (client) {
     }
     if (nread > 0) {
       print("Echoing", chunk)
-      Tcp = global.uv.Tcp
       Tcp.write(client, chunk)
       return
     }
