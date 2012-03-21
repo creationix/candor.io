@@ -7,21 +7,9 @@
 
 using namespace candor;
 
-// TODO: remove when candor API has this.
-static Object* CloneObject(Object* original) {
-  Object* clone = Object::New();
-  Array* keys = original->Keys();
-  int64_t i = keys->Length();
-  while (i--) {
-    Value* key = keys->Get(i);
-    clone->Set(key, original->Get(key));
-  }
-  return clone;
-}
-
 static Value* luv_create_timer(uint32_t argc, Arguments& argv) {
   assert(argc == 0);
-  Object* obj = CloneObject(uv_timer_prototype());
+  Object* obj = uv_timer_prototype()->Clone();
   CData* cdata = CData::New(sizeof(uv_timer_t));
   uv_timer_t* handle = (uv_timer_t*)cdata->GetContents();
   handle->data = obj;
@@ -95,16 +83,18 @@ Object* uv_timer_module() {
   return module;
 }
 
-static Object* prototype;
+static Handle<Object> prototype;
 Object* uv_timer_prototype() {
-  if (prototype) return prototype;
-  prototype = CloneObject(uv_handle_prototype());
-  new Handle<Object>(prototype);
+  if (!prototype.IsEmpty()) return *prototype;
+
+  prototype.Wrap(uv_handle_prototype()->Clone());
+
   prototype->Set("start", Function::New(luv_timer_start));
   prototype->Set("stop", Function::New(luv_timer_stop));
   prototype->Set("again", Function::New(luv_timer_again));
   prototype->Set("getRepeat", Function::New(luv_timer_get_repeat));
   prototype->Set("setRepeat", Function::New(luv_timer_set_repeat));
-  return prototype;
+
+  return *prototype;
 }
 
