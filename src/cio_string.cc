@@ -1,7 +1,10 @@
-#include <assert.h>
-#include <stdio.h>
-#include "candor.h"
 #include "cio_string.h"
+
+#include "candor.h"
+
+#include <assert.h>  // assert
+
+using namespace candor;
 
 static Value* readUInt8(uint32_t argc, Arguments& argv) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());

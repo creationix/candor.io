@@ -1,9 +1,10 @@
+#include "lhttp_parser.h"
+
 #include "candor.h"
 #include "http_parser.h"
-#include "lhttp_parser.h"
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
+
+#include <assert.h> // assert
+#include <string.h> // strcmp
 
 using namespace candor;
 

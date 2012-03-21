@@ -1,12 +1,10 @@
-#include "candor.h"
-#include "uv.h"
-#include "luv_stream.h"
+#include "luv_stream.h" // uv_stream_prototype
 #include "luv_tcp.h"
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include "candor.h"
+#include "uv.h"
+
+#include <assert.h> // assert
 
 using namespace candor;
 
@@ -128,7 +126,7 @@ static void luv_on_connect(uv_connect_t* req, int status) {
     argv[0] = Number::NewIntegral(status);
     callback->As<Function>()->Call(1, argv);
   }
-  free(req);
+  delete req;
 }
 
 static Value* luv_tcp_connect(uint32_t argc, Arguments& argv) {
@@ -141,7 +139,7 @@ static Value* luv_tcp_connect(uint32_t argc, Arguments& argv) {
     obj->Set("onConnect", argv[3]->As<Function>());
   }
   struct sockaddr_in address = uv_ip4_addr(host, port);
-  uv_connect_t* req = (uv_connect_t*)malloc(sizeof(uv_connect_t));
+  uv_connect_t* req = new uv_connect_t;
   req->data = new Handle<Object>(obj);
   int status = uv_tcp_connect(req, handle, address, luv_on_connect);
   return Number::NewIntegral(status);

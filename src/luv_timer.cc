@@ -1,9 +1,10 @@
-#include "candor.h"
-#include "uv.h"
-#include "luv_handle.h"
+#include "luv_handle.h" // uv_handle_prototype
 #include "luv_timer.h"
 
-#include <assert.h>
+#include "candor.h"
+#include "uv.h"
+
+#include <assert.h> // assert
 
 using namespace candor;
 

@@ -1,22 +1,14 @@
-// Needed for APIs used in this file
+#include "main.h"
+
 #include "candor.h"
 #include "uv.h"
-// Our own header
-#include "main.h"
-// The base system
-#include "cio.h"
-// Addon modules
-#include "cio_string.h"
-#include "luv.h"
 
-// Grab some C libraries
+#include "cio.h" // cio_init
+
 #include <stdio.h> // fprintf
 #include <stdlib.h> // abort
 #include <unistd.h> // open, lseek
 #include <fcntl.h> // O_RDONLY, ...
-#include <sys/types.h> // off_t
-#include <string.h> // memcpy
-
 
 using namespace candor;
 

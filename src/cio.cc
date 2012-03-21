@@ -1,20 +1,17 @@
 #include "cio.h"
+
 #include "candor.h"
 
-// Modules
-#include "cio_string.h"
-#include "lhttp_parser.h"
-#include "luv.h"
-#include "luv_tcp.h"
-#include "luv_timer.h"
+#include "cio_string.h"   // cio_string_module
+#include "lhttp_parser.h" // http_parser_module
+#include "luv.h"          // uv_base_module
+#include "luv_tcp.h"      // uv_tcp_module
+#include "luv_timer.h"    // uv_timer_module
 
-
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-
-#include <assert.h>
-#include <stdio.h>
+#include <assert.h> // assert
+#include <string.h> // strcmp
+#include <stdlib.h> // edit
+#include <stdio.h>  // fprintf
 
 using namespace candor;
 

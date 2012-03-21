@@ -1,12 +1,14 @@
 #include "luv.h"
+
 #include "candor.h"
 #include "uv.h"
 
-#include <stdio.h>
+#include <assert.h> // assert
 
 using namespace candor;
 
 static Value* luv_last_error(uint32_t argc, Arguments& argv) {
+  assert(argc == 0);
   Object* error = Object::New();
   uv_err_t err = uv_last_error(uv_default_loop());
   error->Set("name", String::New(uv_err_name(err)));

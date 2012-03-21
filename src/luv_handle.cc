@@ -1,7 +1,9 @@
-#include <assert.h>
+#include "luv_handle.h"
+
 #include "candor.h"
 #include "uv.h"
-#include "luv_handle.h"
+
+#include <assert.h> // assert
 
 using namespace candor;
 

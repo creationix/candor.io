@@ -1,10 +1,10 @@
-#include "candor.h"
-#include "uv.h"
-#include "luv_handle.h"
+#include "luv_handle.h" // uv_handle_prototype
 #include "luv_stream.h"
 
+#include "candor.h"
+#include "uv.h"
+
 #include <assert.h>
-#include <stdlib.h>
 
 using namespace candor;
 
@@ -16,7 +16,7 @@ static void luv_on_shutdown(uv_shutdown_t* req, int status) {
     argv[0] = Number::NewIntegral(status);
     callback->As<Function>()->Call(1, argv);
   }
-  free(req);
+  delete req;
 }
 
 static Value* luv_shutdown(uint32_t argc, Arguments& argv) {
@@ -26,7 +26,7 @@ static Value* luv_shutdown(uint32_t argc, Arguments& argv) {
   if (argc == 2) {
     obj->Set("onShutdown", argv[1]->As<Function>());
   }
-  uv_shutdown_t* req = (uv_shutdown_t*)malloc(sizeof(uv_shutdown_t));
+  uv_shutdown_t* req = new uv_shutdown_t;
   req->data = new Handle<Object>(obj);
   int status = uv_shutdown(req, handle, luv_on_shutdown);
   return Number::NewIntegral(status);
@@ -66,7 +66,7 @@ static Value* luv_accept(uint32_t argc, Arguments& argv) {
 
 static uv_buf_t luv_on_alloc(uv_handle_t* handle, size_t suggested_size) {
   uv_buf_t buf;
-  buf.base = (char*)malloc(suggested_size);
+  buf.base = new char[suggested_size];
   buf.len = suggested_size;
   return buf;
 }
@@ -84,7 +84,7 @@ static void luv_on_read(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
     }
     callback->As<Function>()->Call(2, argv);
   }
-  free(buf.base);
+  delete buf.base;
 }
 
 static Value* luv_read_start(uint32_t argc, Arguments& argv) {
@@ -123,7 +123,7 @@ static Value* luv_write(uint32_t argc, Arguments& argv) {
   Object* obj = argv[0]->As<Object>();
   uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
   String* str = argv[1]->As<String>();
-  uv_buf_t* buf = (uv_buf_t*)malloc(sizeof(uv_buf_t));
+  uv_buf_t* buf = new uv_buf_t;
   uint32_t len = str->Length();
   const char* chunk = str->Value();
   buf->len = len;
@@ -132,7 +132,7 @@ static Value* luv_write(uint32_t argc, Arguments& argv) {
     assert(argv[2]->Is<Function>());
     // TODO: store callback somehow;
   }
-  uv_write_t* req = (uv_write_t*)malloc(sizeof(uv_write_t));
+  uv_write_t* req = new uv_write_t;
   req->data = new Handle<Object>(obj);
   int status = uv_write(req, handle, buf, 1, luv_on_write);
   return Number::NewIntegral(status);
