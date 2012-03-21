@@ -39,9 +39,8 @@ ClientPrototype.end = (self) {
 
 ServerPrototype = {}
 ServerPrototype.listen = (self, port, host, callback) {
-  p(self, port, host, callback)
+  p("ServerPrototype.listen", self, port, host, callback)
   if (!host) host = "0.0.0.0"
-  print("bind", host, port)
   check(self.socket:bind(host, port))
   check(self.listen(128, (status) {
     check(status)
@@ -69,6 +68,7 @@ ServerPrototype.listen = (self, port, host, callback) {
 }
 
 createServer = function (onConnection) {
+  p("createServer", onConnection)
   server = new ServerPrototype
   socket = Tcp.create()
   server.socket = socket
