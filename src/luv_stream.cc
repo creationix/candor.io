@@ -27,7 +27,7 @@ static Value* luv_shutdown(uint32_t argc, Arguments& argv) {
     obj->Set("onShutdown", argv[1]->As<Function>());
   }
   uv_shutdown_t* req = (uv_shutdown_t*)malloc(sizeof(uv_shutdown_t));
-  req->data = obj;
+  req->data = new Handle<Object>(obj);
   int status = uv_shutdown(req, handle, luv_on_shutdown);
   return Number::NewIntegral(status);
 }
@@ -133,7 +133,7 @@ static Value* luv_write(uint32_t argc, Arguments& argv) {
     // TODO: store callback somehow;
   }
   uv_write_t* req = (uv_write_t*)malloc(sizeof(uv_write_t));
-  req->data = obj;
+  req->data = new Handle<Object>(obj);
   int status = uv_write(req, handle, buf, 1, luv_on_write);
   return Number::NewIntegral(status);
 }

@@ -142,7 +142,7 @@ static Value* luv_tcp_connect(uint32_t argc, Arguments& argv) {
   }
   struct sockaddr_in address = uv_ip4_addr(host, port);
   uv_connect_t* req = (uv_connect_t*)malloc(sizeof(uv_connect_t));
-  req->data = obj;
+  req->data = new Handle<Object>(obj);
   int status = uv_tcp_connect(req, handle, address, luv_on_connect);
   return Number::NewIntegral(status);
 }
