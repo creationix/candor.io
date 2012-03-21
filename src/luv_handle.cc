@@ -24,12 +24,12 @@ static Value* luv_close(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-static Object* prototype;
+static Handle<Object> prototype;
 Object* uv_handle_prototype() {
-  if (prototype) return prototype;
-  prototype = Object::New();
-  new Handle<Object>(prototype);
+  if (!prototype.IsEmpty()) return *prototype;
+
+  prototype.Wrap(Object::New());
   prototype->Set("close", Function::New(luv_close));
-  return prototype;
+  return *prototype;
 }
 

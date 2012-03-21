@@ -8,18 +8,6 @@
 
 using namespace candor;
 
-// TODO: remove when candor API has this.
-static Object* CloneObject(Object* original) {
-  Object* clone = Object::New();
-  Array* keys = original->Keys();
-  int64_t i = keys->Length();
-  while (i--) {
-    Value* key = keys->Get(i);
-    clone->Set(key, original->Get(key));
-  }
-  return clone;
-}
-
 static void luv_on_shutdown(uv_shutdown_t* req, int status) {
   Object* obj = (Object*)req->data;
   Value* callback = obj->Get("onShutdown");
@@ -164,11 +152,11 @@ static Value* luv_is_writable(uint32_t argc, Arguments& argv) {
     Boolean::False();
 }
 
-static Object* prototype;
+static Handle<Object> prototype;
 Object* uv_stream_prototype() {
-  if (prototype) return prototype;
-  prototype = CloneObject(uv_handle_prototype());
-  new Handle<Object>(prototype);
+  if (!prototype.IsEmpty()) return *prototype;
+
+  prototype.Wrap(uv_handle_prototype()->Clone());
   prototype->Set("shutdown", Function::New(luv_shutdown));
   prototype->Set("listen", Function::New(luv_listen));
   prototype->Set("accept", Function::New(luv_accept));
@@ -177,6 +165,7 @@ Object* uv_stream_prototype() {
   prototype->Set("write", Function::New(luv_write));
   prototype->Set("isReadable", Function::New(luv_is_readable));
   prototype->Set("isWritable", Function::New(luv_is_writable));
-  return prototype;
+
+  return *prototype;
 }
 

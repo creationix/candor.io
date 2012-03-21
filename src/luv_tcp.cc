@@ -10,18 +10,6 @@
 
 using namespace candor;
 
-// TODO: remove when candor API has this.
-static Object* CloneObject(Object* original) {
-  Object* clone = Object::New();
-  Array* keys = original->Keys();
-  int64_t i = keys->Length();
-  while (i--) {
-    Value* key = keys->Get(i);
-    clone->Set(key, original->Get(key));
-  }
-  return clone;
-}
-
 /* Temporary hack: libuv should provide uv_inet_pton and uv_inet_ntop. */
 #if defined(__MINGW32__) || defined(_MSC_VER)
 # include <inet_net_pton.h>
@@ -40,7 +28,7 @@ using namespace candor;
 
 static Value* luv_create_tcp(uint32_t argc, Arguments& argv) {
   assert(argc == 0);
-  Object* obj = CloneObject(uv_tcp_prototype());
+  Object* obj = uv_tcp_prototype()->Clone();
   CData* cdata = CData::New(sizeof(uv_tcp_t));
   uv_tcp_t* handle = (uv_tcp_t*)cdata->GetContents();
   handle->data = obj;
@@ -168,17 +156,17 @@ Object* uv_tcp_module() {
   return module;
 }
 
-static Object* prototype;
+static Handle<Object> prototype;
 Object* uv_tcp_prototype() {
-  if (prototype) return prototype;
-  prototype = CloneObject(uv_stream_prototype());
+  if (!prototype.IsEmpty()) return *prototype;
+  prototype.Wrap(uv_stream_prototype()->Clone());
   prototype->Set("nodelay", Function::New(luv_tcp_nodelay));
   prototype->Set("keepalive", Function::New(luv_tcp_keepalive));
   prototype->Set("bind", Function::New(luv_tcp_bind));
   prototype->Set("getsockname", Function::New(luv_tcp_getsockname));
   prototype->Set("getpeername", Function::New(luv_tcp_getpeername));
   prototype->Set("connect", Function::New(luv_tcp_connect));
-  return prototype;
+  return *prototype;
 }
 
 
