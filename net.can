@@ -1,0 +1,85 @@
+print = global.print
+p = global.prettyPrint
+require = global.require
+
+throw = (err) {
+  p(err)
+  global.exit()
+}
+
+// Used to emit on errors when libuv badness happens
+check = (status) {
+  if (status) {
+    throw(require('uv').lastError())
+  }
+}
+
+Tcp = require('tcp')
+
+StreamPrototype = {}
+StreamPrototype.pipe = (self, stream) {
+  self.onData = (chunk) {
+    stream:write(chunk)
+  }
+  self.onEnd = () {
+    stream:end()
+  }
+}
+
+ClientPrototype = new StreamPrototype
+ClientPrototype.write = (self, chunk, callback) {
+  check(self.socket:write(chunk, callback))
+}
+ClientPrototype.end = (self) {
+  check(self.socket:shutdown((status) {
+    check(status)
+    self.socket:close()
+  }))
+}
+
+ServerPrototype = {}
+ServerPrototype.listen = (self, port, host, callback) {
+  p(self, port, host, callback)
+  if (!host) host = "0.0.0.0"
+  print("bind", host, port)
+  check(self.socket:bind(host, port))
+  check(self.listen(128, (status) {
+    check(status)
+    client = new ClientPrototype
+    client.socket = socket
+    socket = Tcp.create()
+    check(self.socket:accept(socket))
+    self.onConnection(client)
+    check(socket:readStart((nread, chunk) {
+      if (nread == -1) {
+        err = require('uv').lastError()
+        if (err.name == "EOF") {
+          client.onEnd()
+        } else {
+          throw(err)
+        }
+        return
+      }
+      if (nread > 0) {
+        client.onData(chunk)
+        return
+      }
+    }))
+  }))
+}
+
+createServer = function (onConnection) {
+  server = new ServerPrototype
+  socket = Tcp.create()
+  server.socket = socket
+  server.onConnection = onConnection
+  return server
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Make an echo server using the API
+createServer((client) {
+  client:pipe(client)
+}):listen(8080)
+print("TCP echo server listening on port 8080")
