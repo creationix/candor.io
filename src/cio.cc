@@ -1,5 +1,14 @@
 #include "cio.h"
 #include "candor.h"
+
+// Modules
+#include "cio_string.h"
+#include "lhttp_parser.h"
+#include "luv.h"
+#include "luv_tcp.h"
+#include "luv_timer.h"
+
+
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
@@ -8,9 +17,6 @@
 #include <stdio.h>
 
 using namespace candor;
-
-static Object* builtins;
-static Object* builtinCache;
 
 // Print a value to a fd
 static void printValue(FILE* fd, Value* value, bool shallow) {
@@ -134,32 +140,19 @@ static Value* Exit(uint32_t argc, Arguments& argv) {
 }
 
 static Value* LoadBuiltin(uint32_t argc, Arguments& argv) {
-  assert(argc == 1 && argv[0]->Is<String>());
-  String* name = argv[0]->As<String>();
-  Value* cache = builtinCache->Get(name);
-  if (!cache->Is<Nil>()) {
-    return cache;
-  }
-  Value* obj = builtins->Get(name);
-  assert(obj->Is<Function>());
-  Function* setup = obj->As<Function>();
-  Value* module = setup->Call(0, NULL);
-  if (!module->Is<Nil>()) {
-    builtinCache->Set(name, module);
-  }
-  return module;
+  assert(argc == 1);
+  const char* name = argv[0]->As<String>()->Value();
+  if (0 == strcmp(name, "string")) return cio_string_module();
+  if (0 == strcmp(name, "uv")) return uv_base_module();
+  if (0 == strcmp(name, "timer")) return uv_timer_module();
+  if (0 == strcmp(name, "tcp")) return uv_tcp_module();
+  if (0 == strcmp(name, "http_parser")) return http_parser_module();
+  return Nil::New();
 }
 
-Object* cio_init(Object* global) {
+void cio_init(Object* global) {
   global->Set("print", Function::New(Print));
   global->Set("prettyPrint", Function::New(PrettyPrint));
   global->Set("exit", Function::New(Exit));
   global->Set("require", Function::New(LoadBuiltin));
-  builtins = Object::New();
-  builtinCache = Object::New();
-  // Make the objects persistent
-  new Handle<Object>(builtins);
-  new Handle<Object>(builtinCache);
-
-  return builtins;
 }

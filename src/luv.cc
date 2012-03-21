@@ -14,8 +14,11 @@ static Value* luv_last_error(uint32_t argc, Arguments& argv) {
   return error;
 }
 
-Value* uv_base_module(uint32_t argc, Arguments& argv) {
-  Object* uv = Object::New();
-  uv->Set("lastError", Function::New(luv_last_error));
-  return uv;
+static Object* module;
+Object* uv_base_module() {
+  if (module) return module;
+  module = Object::New();
+  new Handle<Object>(module);
+  module->Set("lastError", Function::New(luv_last_error));
+  return module;
 }

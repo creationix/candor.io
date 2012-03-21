@@ -6,51 +6,107 @@
 #include <stdio.h>
 
 using namespace candor;
-using namespace candorIO;
 
 static http_parser_settings settings;
 
+static int emit(http_parser* parser, const char* name) {
+  Object* obj = (Object*)parser->data;
+  Value* callback = obj->Get(name);
+  if (callback->Is<Function>()) {
+    Value* result = callback->As<Function>()->Call(0, NULL);
+    return result->ToNumber()->IntegralValue();
+  }
+  return 0;
+}
+
+static int emit(http_parser* parser, const char* name, const char *at, size_t length) {
+  Object* obj = (Object*)parser->data;
+  Value* callback = obj->Get(name);
+  if (callback->Is<Function>()) {
+    Value* argv[1];
+    argv[0] = String::New(at, length);
+    Value* result = callback->As<Function>()->Call(1, argv);
+    return result->ToNumber()->IntegralValue();
+  }
+  return 0;
+}
+
 static int lhttp_on_message_begin(http_parser* parser) {
-  return (reinterpret_cast<HttpParser*>(parser->data))->Emit("messageBegin");
+  return emit(parser, "onMessageBegin");
 }
 static int lhttp_on_url(http_parser* parser, const char *at, size_t length) {
-  return (reinterpret_cast<HttpParser*>(parser->data))->Emit("url", at, length);
+  return emit(parser, "onUrl", at, length);
 }
 static int lhttp_on_header_field(http_parser* parser, const char *at, size_t length) {
-  return (reinterpret_cast<HttpParser*>(parser->data))->Emit("headerField", at, length);
+  return emit(parser, "onHeaderField", at, length);
 }
 static int lhttp_on_header_value(http_parser* parser, const char *at, size_t length) {
-  return (reinterpret_cast<HttpParser*>(parser->data))->Emit("headerValue", at, length);
+  return emit(parser, "onHeaderValue", at, length);
 }
 static int lhttp_on_headers_complete(http_parser* parser) {
-  return (reinterpret_cast<HttpParser*>(parser->data))->Emit("headersComplete");
+  return emit(parser, "onHeadersComplete");
 }
 static int lhttp_on_body(http_parser* parser, const char *at, size_t length) {
-  return (reinterpret_cast<HttpParser*>(parser->data))->Emit("body", at, length);
+  return emit(parser, "onBody", at, length);
 }
 static int lhttp_on_message_complete(http_parser* parser) {
-  return (reinterpret_cast<HttpParser*>(parser->data))->Emit("messageComplete");
+  return emit(parser, "onMessageComplete");
 }
 
 static Value* lhttp_create(uint32_t argc, Arguments& argv) {
-  HttpParser* parser = new HttpParser();
-  return parser->Wrap();
+  assert(argc == 0);
+  Object* obj = Object::New();
+  CData* cdata = CData::New(sizeof(http_parser));
+  http_parser* parser = (http_parser*)cdata->GetContents();
+  parser->data = obj;
+  obj->Set("cdata", cdata);
+  return obj;
 }
+
 static Value* lhttp_init(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<HttpParser>(argv[0])->Init(argc, argv);
+  assert(argc >= 2 && argc <= 3);
+  Object* obj = argv[0]->As<Object>();
+  http_parser* parser = (http_parser*)obj->Get("cdata")->As<CData>()->GetContents();
+  const char* type = argv[1]->As<String>()->Value();
+  if (argc == 3) {
+    Object* callbacks = argv[2]->As<Object>();
+    Array* keys = callbacks->Keys();
+    int64_t i = keys->Length();
+    while (i--) {
+      Value* key = keys->Get(i);
+      obj->Set(key, callbacks->Get(key));
+    }
+  }
+  if (0 == strcmp(type, "request")) {
+    http_parser_init(parser, HTTP_REQUEST);
+  } else if (0 == strcmp(type, "response")) {
+    http_parser_init(parser, HTTP_RESPONSE);
+  } else if (0 == strcmp(type, "both")) {
+    http_parser_init(parser, HTTP_BOTH);
+  } else {
+    assert(false);
+  }
+  return Nil::New();
 }
+
 static Value* lhttp_execute(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<HttpParser>(argv[0])->Execute(argc, argv);
+  assert(argc == 2);
+  Object* obj = argv[0]->As<Object>();
+  http_parser* parser = (http_parser*)obj->Get("cdata")->As<CData>()->GetContents();
+  String* str = argv[1]->As<String>();
+  const char* data = str->Value();
+  size_t len = str->Length();
+  size_t nparsed = http_parser_execute(parser, &settings, data, len);
+  return Number::NewIntegral(nparsed);
 }
-static Value* lhttp_finish(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<HttpParser>(argv[0])->Finish(argc, argv);
-}
+
 static Value* lhttp_pause(uint32_t argc, Arguments& argv) {
-  assert(argc && argv[0]->Is<CData>());
-  return CWrapper::Unwrap<HttpParser>(argv[0])->Pause(argc, argv);
+  assert(argc == 2);
+  Object* obj = argv[0]->As<Object>();
+  http_parser* parser = (http_parser*)obj->Get("cdata")->As<CData>()->GetContents();
+  int paused = argv[1]->As<Boolean>()->IsTrue();
+  http_parser_pause(parser, paused);
+  return Nil::New();
 }
 
 static Value* lhttp_parse_url(uint32_t argc, Arguments& argv) {
@@ -92,7 +148,9 @@ static Value* lhttp_parse_url(uint32_t argc, Arguments& argv) {
   return url;
 }
 
-Value* http_parser_module(uint32_t argc, Arguments& argv) {
+static Object* module;
+Object* http_parser_module() {
+  if (module) return module;
   // Initialize the settings
   settings.on_message_begin = lhttp_on_message_begin;
   settings.on_url = lhttp_on_url;
@@ -102,71 +160,23 @@ Value* http_parser_module(uint32_t argc, Arguments& argv) {
   settings.on_body = lhttp_on_body;
   settings.on_message_complete = lhttp_on_message_complete;
 
-  Object* module = Object::New();
+  module = Object::New();
   module->Set("parseUrl", Function::New(lhttp_parse_url));
   module->Set("create", Function::New(lhttp_create));
-  module->Set("init", Function::New(lhttp_init));
-  module->Set("execute", Function::New(lhttp_execute));
-  module->Set("finish", Function::New(lhttp_finish));
-  module->Set("pause", Function::New(lhttp_pause));
   return module;
 }
 
-
-int HttpParser::Emit(const char* name) {
-  Value* callback = callbacks->Get(name);
-  if (callback->Is<Function>()) {
-    Value* result = callback->As<Function>()->Call(0, NULL);
-    return result->ToNumber()->IntegralValue();
-  }
-  return 0;
+static Object* prototype;
+Object* http_parser_prototype() {
+  if (prototype) return prototype;
+  prototype = Object::New();
+  new Handle<Object>(prototype);
+  prototype->Set("init", Function::New(lhttp_init));
+  prototype->Set("execute", Function::New(lhttp_execute));
+  prototype->Set("pause", Function::New(lhttp_pause));
+  return prototype;
 }
 
-int HttpParser::Emit(const char* name, const char *at, size_t length) {
-  Value* callback = callbacks->Get(name);
-  if (callback->Is<Function>()) {
-    Value* argv[1];
-    argv[0] = String::New(at, length);
-    Value* result = callback->As<Function>()->Call(1, argv);
-    return result->ToNumber()->IntegralValue();
-  }
-  return 0;
-}
 
-Value* HttpParser::Init(uint32_t argc, Arguments& argv) {
-  assert(argc == 3 && argv[1]->Is<String>() && argv[2]->Is<Object>());
-  const char* type = argv[1]->As<String>()->Value();
-  callbacks.Wrap(argv[2]->As<Object>());
-  if (0 == strcmp(type, "request")) {
-    http_parser_init(&parser, HTTP_REQUEST);
-  } else if (0 == strcmp(type, "response")) {
-    http_parser_init(&parser, HTTP_RESPONSE);
-  } else if (0 == strcmp(type, "both")) {
-    http_parser_init(&parser, HTTP_BOTH);
-  } else {
-    return String::New("type must be 'request' or 'response' or 'both'");
-  }
-  return Nil::New();
-}
 
-Value* HttpParser::Execute(uint32_t argc, Arguments& argv) {
-  assert(argc == 2 && argv[1]->Is<String>());
-  String* str = argv[1]->As<String>();
-  const char* data = str->Value();
-  size_t len = str->Length();
-  size_t nparsed = http_parser_execute(&parser, &settings, data, len);
-  return Number::NewIntegral(nparsed);
-}
-
-Value* HttpParser::Pause(uint32_t argc, Arguments& argv) {
-  assert(argc = 2 && argv[1]->Is<Boolean>());
-  int paused = argv[1]->As<Boolean>()->IsTrue();
-  http_parser_pause(&parser, paused);
-  return Nil::New();
-}
-
-Value* HttpParser::Finish(uint32_t argc, Arguments& argv) {
-  printf("TODO: Implement HttpParser::Finish\n");
-  return Nil::New();
-}
 

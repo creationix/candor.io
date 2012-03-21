@@ -67,18 +67,20 @@ static Value* readInt64(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(int64_t*)((uint8_t*)str->Value() + offset));
 }
 
-
-Value* cio_string_module(uint32_t argc, Arguments& argv) {
-  Object* string = Object::New();
+static Object* module;
+Object* cio_string_module() {
+  if (module) return module;
+  module = Object::New();
+  new Handle<Object>(module);
   // These match the endianess of the host.
   // TODO: add functions using explicit endianess
-  string->Set("readUInt8", Function::New(readUInt8));
-  string->Set("readInt8", Function::New(readInt8));
-  string->Set("readUInt16", Function::New(readUInt16));
-  string->Set("readInt16", Function::New(readInt16));
-  string->Set("readUInt32", Function::New(readUInt32));
-  string->Set("readInt32", Function::New(readInt32));
-  string->Set("readUInt64", Function::New(readUInt64));
-  string->Set("readInt64", Function::New(readInt64));
-  return string;
+  module->Set("readUInt8", Function::New(readUInt8));
+  module->Set("readInt8", Function::New(readInt8));
+  module->Set("readUInt16", Function::New(readUInt16));
+  module->Set("readInt16", Function::New(readInt16));
+  module->Set("readUInt32", Function::New(readUInt32));
+  module->Set("readInt32", Function::New(readInt32));
+  module->Set("readUInt64", Function::New(readUInt64));
+  module->Set("readInt64", Function::New(readInt64));
+  return module;
 }

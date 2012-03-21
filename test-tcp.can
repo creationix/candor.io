@@ -18,19 +18,20 @@ Tcp = require('tcp')
 
 p("Tcp", Tcp)
 server = Tcp.create()
-check(Tcp.bind(server, "0.0.0.0", 8080))
+
+check(server:bind("0.0.0.0", 8080))
 
 onConnection = (client) {
   p("onConnection")
 
-  check(Tcp.readStart(client, (nread, chunk) {
+  check(client:readStart((nread, chunk) {
     if (nread == -1) {
-      err = global.uv.lastError()
+      err = require('uv').lastError()
       if (err.name == "EOF") {
         p("EOF")
-        Tcp.shutdown(client, () {
+        client:shutdown(() {
           p("shutdown")
-          Tcp.close(client, () {
+          client:close(() {
             p("closed")
           })  
         })
@@ -41,16 +42,17 @@ onConnection = (client) {
     }
     if (nread > 0) {
       p("Echoing", chunk)
-      Tcp.write(client, chunk)
+      client:write(chunk)
       return
     }
   }))
 
 }
 
-check(Tcp.listen(server, 128, () {
+check(server:listen(128, () {
   client = Tcp.create()
-  check(Tcp.accept(server, client))
+  check(server:accept(client))
   onConnection(client)
 }))
+p("server", server)
 print("TCP echo server listening on port 8080")

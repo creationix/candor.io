@@ -5,6 +5,6 @@
 
 using namespace candor;
 
-Object* cio_init(Object* global);
+void cio_init(Object* global);
 
 #endif

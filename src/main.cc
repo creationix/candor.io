@@ -8,9 +8,6 @@
 // Addon modules
 #include "cio_string.h"
 #include "luv.h"
-#include "luv_tcp.h"
-#include "luv_timer.h"
-#include "lhttp_parser.h"
 
 // Grab some C libraries
 #include <stdio.h> // fprintf
@@ -74,16 +71,7 @@ int main(int argc, char** argv) {
 
   // Create a global context
   Handle<Object> global(Object::New());
-  // Inject cio module into global scope, it returns an object where we need
-  // to store all module creation functions.
-  Object* builtins = cio_init(*global);
-
-  // Store other native modules for lazy-loading
-  builtins->Set("string", Function::New(cio_string_module));
-  builtins->Set("uv", Function::New(uv_base_module));
-  builtins->Set("timer", Function::New(uv_timer_module));
-  builtins->Set("tcp", Function::New(uv_tcp_module));
-  builtins->Set("http_parser", Function::New(http_parser_module));
+  cio_init(*global);
 
   code->SetContext(*global);
   code->Call(0, NULL);
