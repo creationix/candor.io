@@ -9,7 +9,7 @@
 using namespace candor;
 
 static void luv_on_shutdown(uv_shutdown_t* req, int status) {
-  Object* obj = (Object*)req->data;
+  Object* obj = **((Handle<Object>*)req->data);
   Value* callback = obj->Get("onShutdown");
   if (callback->Is<Function>()) {
     Value* argv[1];
@@ -33,7 +33,7 @@ static Value* luv_shutdown(uint32_t argc, Arguments& argv) {
 }
 
 static void luv_on_connection(uv_stream_t* server, int status) {
-  Object* obj = (Object*)server->data;
+  Object* obj = **((Handle<Object>*)server->data);
   Value* callback = obj->Get("onConnection");
   if (callback->Is<Function>()) {
     Value* argv[1];
@@ -72,7 +72,7 @@ static uv_buf_t luv_on_alloc(uv_handle_t* handle, size_t suggested_size) {
 }
 
 static void luv_on_read(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
-  Object* obj = (Object*)stream->data;
+  Object* obj = **((Handle<Object>*)stream->data);
   Value* callback = obj->Get("onRead");
   if (callback->Is<Function>()) {
     Value* argv[2];
@@ -107,11 +107,15 @@ static Value* luv_read_stop(uint32_t argc, Arguments& argv) {
 }
 
 static void luv_on_write(uv_write_t* req, int status) {
-  // TODO call write callback if there is one
-  // Value* argv[1];
-  // argv[0] = Number::NewIntegral(status);
-  // onWrite->Call(1, argv);
+  // TODO: call write callback if there is one
   // memory managent probably needs to happen too.
+  // Object* obj = **((Handle<Object>*)req->data);
+  // Value* callback = obj->Get("onWrite");
+  // if (callback->Is<Function>()) {
+  //   Value* argv[1];
+  //   argv[0] = Number::NewIntegral(status);
+  //   callback->As<Function>()->Call(1, argv);
+  // }
 }
 
 static Value* luv_write(uint32_t argc, Arguments& argv) {

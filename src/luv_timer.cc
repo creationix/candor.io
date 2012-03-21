@@ -12,14 +12,14 @@ static Value* luv_create_timer(uint32_t argc, Arguments& argv) {
   Object* obj = uv_timer_prototype()->Clone();
   CData* cdata = CData::New(sizeof(uv_timer_t));
   uv_timer_t* handle = (uv_timer_t*)cdata->GetContents();
-  handle->data = obj;
+  handle->data = new Handle<Object>(obj);
   obj->Set("cdata", cdata);
   uv_timer_init(uv_default_loop(), handle);
   return obj;
 }
 
 static void luv_on_timer(uv_timer_t* handle, int status) {
-  Object* obj = (Object*)handle->data;
+  Object* obj = **((Handle<Object>*)handle->data);
   Value* callback = obj->Get("onTimer");
   if (callback->Is<Function>()) {
     Value* argv[1];
@@ -74,13 +74,12 @@ static Value* luv_timer_set_repeat(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-static Object* module;
+static Handle<Object> module;
 Object* uv_timer_module() {
-  if (module) return module;
-  module = Object::New();
-  new Handle<Object>(module);
+  if (!module.IsEmpty()) return *module;
+  module.Wrap(Object::New());
   module->Set("create", Function::New(luv_create_timer));  
-  return module;
+  return *module;
 }
 
 static Handle<Object> prototype;

@@ -67,11 +67,10 @@ static Value* readInt64(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(int64_t*)((uint8_t*)str->Value() + offset));
 }
 
-static Object* module;
+static Handle<Object> module;
 Object* cio_string_module() {
-  if (module) return module;
-  module = Object::New();
-  new Handle<Object>(module);
+  if (!module.IsEmpty()) return *module;
+  module.Wrap(Object::New());
   // These match the endianess of the host.
   // TODO: add functions using explicit endianess
   module->Set("readUInt8", Function::New(readUInt8));
@@ -82,5 +81,5 @@ Object* cio_string_module() {
   module->Set("readInt32", Function::New(readInt32));
   module->Set("readUInt64", Function::New(readUInt64));
   module->Set("readInt64", Function::New(readInt64));
-  return module;
+  return *module;
 }

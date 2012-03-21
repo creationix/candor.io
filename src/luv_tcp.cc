@@ -31,7 +31,7 @@ static Value* luv_create_tcp(uint32_t argc, Arguments& argv) {
   Object* obj = uv_tcp_prototype()->Clone();
   CData* cdata = CData::New(sizeof(uv_tcp_t));
   uv_tcp_t* handle = (uv_tcp_t*)cdata->GetContents();
-  handle->data = obj;
+  handle->data = new Handle<Object>(obj);
   obj->Set("cdata", cdata);
   uv_tcp_init(uv_default_loop(), handle);
   return obj;
@@ -121,7 +121,7 @@ static Value* luv_tcp_getpeername(uint32_t argc, Arguments& argv) {
 }
 
 static void luv_on_connect(uv_connect_t* req, int status) {
-  Object* obj = (Object*)req->data;
+  Object* obj = **((Handle<Object>*)req->data);
   Value* callback = obj->Get("onConnect");
   if (callback->Is<Function>()) {
     Value* argv[1];
@@ -147,13 +147,12 @@ static Value* luv_tcp_connect(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(status);
 }
 
-static Object* module;
+static Handle<Object> module;
 Object* uv_tcp_module() {
-  if (module) return module;
-  module = Object::New();
-  new Handle<Object>(module);
+  if (!module.IsEmpty()) return *module;
+  module.Wrap(Object::New());
   module->Set("create", Function::New(luv_create_tcp));
-  return module;
+  return *module;
 }
 
 static Handle<Object> prototype;

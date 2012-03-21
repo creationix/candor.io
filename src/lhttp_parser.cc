@@ -148,9 +148,10 @@ static Value* lhttp_parse_url(uint32_t argc, Arguments& argv) {
   return url;
 }
 
-static Object* module;
+static Handle<Object> module;
 Object* http_parser_module() {
-  if (module) return module;
+  if (!module.IsEmpty()) return *module;
+  module.Wrap(Object::New());
   // Initialize the settings
   settings.on_message_begin = lhttp_on_message_begin;
   settings.on_url = lhttp_on_url;
@@ -160,10 +161,9 @@ Object* http_parser_module() {
   settings.on_body = lhttp_on_body;
   settings.on_message_complete = lhttp_on_message_complete;
 
-  module = Object::New();
   module->Set("parseUrl", Function::New(lhttp_parse_url));
   module->Set("create", Function::New(lhttp_create));
-  return module;
+  return *module;
 }
 
 static Object* prototype;

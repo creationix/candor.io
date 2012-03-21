@@ -6,7 +6,7 @@
 using namespace candor;
 
 static void luv_on_close(uv_handle_t* handle) {
-  Object* obj = (Object*)handle->data;
+  Object* obj = **((Handle<Object>*)handle->data);
   Value* callback = obj->Get("onTimer");
   if (callback->Is<Function>()) {
     callback->As<Function>()->Call(0, NULL);;

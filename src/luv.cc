@@ -14,11 +14,10 @@ static Value* luv_last_error(uint32_t argc, Arguments& argv) {
   return error;
 }
 
-static Object* module;
+static Handle<Object> module;
 Object* uv_base_module() {
-  if (module) return module;
-  module = Object::New();
-  new Handle<Object>(module);
+  if (!module.IsEmpty()) return *module;
+  module.Wrap(Object::New());
   module->Set("lastError", Function::New(luv_last_error));
-  return module;
+  return *module;
 }
