@@ -1,0 +1,81 @@
+require = global.require
+
+throw = (err) {
+  global.prettyPrint(err)
+  global.exit()
+}
+
+// Used to emit on errors when libuv badness happens
+check = (status) {
+  if (status) {
+    throw(require('uv').lastError())
+  }
+}
+
+Tcp = require('tcp')
+
+StreamPrototype = {}
+StreamPrototype.pipe = (self, stream) {
+  self.onData = (chunk) {
+    stream:write(chunk)
+  }
+  self.onEnd = () {
+    stream:end()
+  }
+}
+
+ClientPrototype = new StreamPrototype
+ClientPrototype.write = (self, chunk, callback) {
+  check(self.socket:write(chunk, callback))
+}
+ClientPrototype.end = (self) {
+  check(self.socket:shutdown((status) {
+    check(status)
+    self.socket:close()
+  }))
+}
+
+ServerPrototype = {}
+ServerPrototype.listen = (self, port, host, callback) {
+  if (!host) host = "0.0.0.0"
+  check(self.socket:bind(host, port))
+  check(self.socket:listen(128, (status) {
+    check(status)
+    client = new ClientPrototype
+    socket = Tcp.create()
+    client.socket = socket
+    check(self.socket:accept(socket))
+    self.onConnection(client)
+    check(socket:readStart((nread, chunk) {
+      if (nread == -1) {
+        err = require('uv').lastError()
+        if (err.name == "EOF") {
+          client.onEnd()
+        } else {
+          throw(err)
+        }
+        return
+      }
+      if (nread > 0) {
+        client.onData(chunk)
+        return
+      }
+    }))
+  }))
+}
+
+createServer = function (onConnection) {
+  p("createServer", onConnection)
+  server = new ServerPrototype
+  socket = Tcp.create()
+  server.socket = socket
+  server.onConnection = onConnection
+  return server
+}
+
+return {
+  StreamPrototype: StreamPrototype,
+  ClientPrototype: ClientPrototype,
+  ServerPrototype: ServerPrototype,
+  createServer: createServer
+}

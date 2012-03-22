@@ -2,6 +2,7 @@
 
 #include "candor.h"
 
+#include "cio_libs.h"     // cio_net_module
 #include "cio_string.h"   // cio_string_module
 #include "lhttp_parser.h" // http_parser_module
 #include "luv_base.h"     // uv_base_module
@@ -148,6 +149,10 @@ static Value* Exit(uint32_t argc, Value* argv[]) {
 static Value* LoadBuiltin(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   const char* name = argv[0]->As<String>()->Value();
+#define XX(Name) \
+  if (0 == strcmp(name, #Name)) return cio_##Name##_module();
+  CIO_LIB_MAP(XX)
+#undef XX
   if (0 == strcmp(name, "string")) return cio_string_module();
   if (0 == strcmp(name, "uv")) return uv_base_module();
   if (0 == strcmp(name, "timer")) return uv_timer_module();

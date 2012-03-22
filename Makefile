@@ -20,13 +20,15 @@ DEPS=${CANDIR}/candor.a  \
 LIBS=build/main.o       \
      build/lhttp_parser.o \
      build/cio.o        \
+     build/cio_libs.o   \
      build/cio_string.o \
      build/luv.o        \
      build/luv_base.o   \
      build/luv_handle.o \
      build/luv_stream.o \
      build/luv_tcp.o    \
-     build/luv_timer.o
+     build/luv_timer.o  \
+     build/net.o
 
 all: build/canio
 
@@ -39,9 +41,11 @@ ${UVDIR}/uv.a: ${UVDIR}/Makefile
 ${HTTPDIR}/http_parser.o: ${HTTPDIR}/Makefile
 	$(MAKE) -C ${HTTPDIR} http_parser.o
 
-
 build:
 	mkdir -p build
+
+build/%.o: lib/%.can build
+	objcopy --input binary --output elf64-x86-64 --binary-architecture i386 $< $@
 
 build/%.o: src/%.cc build src/%.h ${DEPS}
 	g++ -g -Wall -Werror -c $< -o $@ -I${HTTPDIR} -I${UVDIR}/include -I${CANDIR}/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
