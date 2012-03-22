@@ -79,7 +79,11 @@ createServer = function (onConnection) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // Make an echo server using the API
-createServer((client) {
+server = createServer((client) {
   client:pipe(client)
-}):listen(8080)
+})
+ServerPrototype.listen(1)
+ServerPrototype.listen(1, 2)
+ServerPrototype.listen(1, 2, 3)
+ServerPrototype.listen(1, 2, 3, 4)
 print("TCP echo server listening on port 8080")
