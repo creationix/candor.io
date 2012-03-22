@@ -8,7 +8,7 @@
 
 using namespace candor;
 
-static Value* luv_create_timer(uint32_t argc, Arguments& argv) {
+static Value* luv_create_timer(uint32_t argc, Value* argv[]) {
   assert(argc == 0);
   Object* obj = uv_timer_prototype()->Clone();
   CData* cdata = CData::New(sizeof(uv_timer_t));
@@ -29,7 +29,7 @@ static void luv_on_timer(uv_timer_t* handle, int status) {
   }
 }
 
-static Value* luv_timer_start(uint32_t argc, Arguments& argv) {
+static Value* luv_timer_start(uint32_t argc, Value* argv[]) {
   assert(argc >= 3 && argc <= 4);
   Object* obj = argv[0]->As<Object>();
   uv_timer_t* handle = (uv_timer_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -42,7 +42,7 @@ static Value* luv_timer_start(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(status);
 }
 
-static Value* luv_timer_stop(uint32_t argc, Arguments& argv) {
+static Value* luv_timer_stop(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
   uv_timer_t* handle = (uv_timer_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -50,7 +50,7 @@ static Value* luv_timer_stop(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(status);
 }
 
-static Value* luv_timer_again(uint32_t argc, Arguments& argv) {
+static Value* luv_timer_again(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
   uv_timer_t* handle = (uv_timer_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -58,7 +58,7 @@ static Value* luv_timer_again(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(status);
 }
 
-static Value* luv_timer_get_repeat(uint32_t argc, Arguments& argv) {
+static Value* luv_timer_get_repeat(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
   uv_timer_t* handle = (uv_timer_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -66,7 +66,7 @@ static Value* luv_timer_get_repeat(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(repeat);
 }
 
-static Value* luv_timer_set_repeat(uint32_t argc, Arguments& argv) {
+static Value* luv_timer_set_repeat(uint32_t argc, Value* argv[]) {
   assert(argc == 2);
   Object* obj = argv[0]->As<Object>();
   uv_timer_t* handle = (uv_timer_t*)obj->Get("cdata")->As<CData>()->GetContents();

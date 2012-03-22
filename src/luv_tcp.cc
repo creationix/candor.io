@@ -24,7 +24,7 @@ using namespace candor;
 
 using namespace candor;
 
-static Value* luv_create_tcp(uint32_t argc, Arguments& argv) {
+static Value* luv_create_tcp(uint32_t argc, Value* argv[]) {
   assert(argc == 0);
   Object* obj = uv_tcp_prototype()->Clone();
   CData* cdata = CData::New(sizeof(uv_tcp_t));
@@ -35,7 +35,7 @@ static Value* luv_create_tcp(uint32_t argc, Arguments& argv) {
   return obj;
 }
 
-static Value* luv_tcp_nodelay(uint32_t argc, Arguments& argv) {
+static Value* luv_tcp_nodelay(uint32_t argc, Value* argv[]) {
   assert(argc == 2);
   Object* obj = argv[0]->As<Object>();
   uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -44,7 +44,7 @@ static Value* luv_tcp_nodelay(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(status);
 }
 
-static Value* luv_tcp_keepalive(uint32_t argc, Arguments& argv) {
+static Value* luv_tcp_keepalive(uint32_t argc, Value* argv[]) {
   assert(argc == 3);
   Object* obj = argv[0]->As<Object>();
   uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -54,7 +54,7 @@ static Value* luv_tcp_keepalive(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(status);
 }
 
-static Value* luv_tcp_bind(uint32_t argc, Arguments& argv) {
+static Value* luv_tcp_bind(uint32_t argc, Value* argv[]) {
   assert(argc == 3);
   Object* obj = argv[0]->As<Object>();
   uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -64,7 +64,7 @@ static Value* luv_tcp_bind(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(status);
 }
 
-static Value* luv_tcp_getsockname(uint32_t argc, Arguments& argv) {
+static Value* luv_tcp_getsockname(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
   uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -91,7 +91,7 @@ static Value* luv_tcp_getsockname(uint32_t argc, Arguments& argv) {
   return result;
 }
 
-static Value* luv_tcp_getpeername(uint32_t argc, Arguments& argv) {
+static Value* luv_tcp_getpeername(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
   uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -129,7 +129,7 @@ static void luv_on_connect(uv_connect_t* req, int status) {
   delete req;
 }
 
-static Value* luv_tcp_connect(uint32_t argc, Arguments& argv) {
+static Value* luv_tcp_connect(uint32_t argc, Value* argv[]) {
   assert(argc >= 3 && argc <= 4);
   Object* obj = argv[0]->As<Object>();
   uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();

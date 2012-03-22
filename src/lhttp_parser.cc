@@ -54,7 +54,7 @@ static int lhttp_on_message_complete(http_parser* parser) {
   return emit(parser, "onMessageComplete");
 }
 
-static Value* lhttp_create(uint32_t argc, Arguments& argv) {
+static Value* lhttp_create(uint32_t argc, Value* argv[]) {
   assert(argc == 0);
   Object* obj = Object::New();
   CData* cdata = CData::New(sizeof(http_parser));
@@ -64,7 +64,7 @@ static Value* lhttp_create(uint32_t argc, Arguments& argv) {
   return obj;
 }
 
-static Value* lhttp_init(uint32_t argc, Arguments& argv) {
+static Value* lhttp_init(uint32_t argc, Value* argv[]) {
   assert(argc >= 2 && argc <= 3);
   Object* obj = argv[0]->As<Object>();
   http_parser* parser = (http_parser*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -90,7 +90,7 @@ static Value* lhttp_init(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-static Value* lhttp_execute(uint32_t argc, Arguments& argv) {
+static Value* lhttp_execute(uint32_t argc, Value* argv[]) {
   assert(argc == 2);
   Object* obj = argv[0]->As<Object>();
   http_parser* parser = (http_parser*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -101,7 +101,7 @@ static Value* lhttp_execute(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(nparsed);
 }
 
-static Value* lhttp_pause(uint32_t argc, Arguments& argv) {
+static Value* lhttp_pause(uint32_t argc, Value* argv[]) {
   assert(argc == 2);
   Object* obj = argv[0]->As<Object>();
   http_parser* parser = (http_parser*)obj->Get("cdata")->As<CData>()->GetContents();
@@ -110,7 +110,7 @@ static Value* lhttp_pause(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-static Value* lhttp_parse_url(uint32_t argc, Arguments& argv) {
+static Value* lhttp_parse_url(uint32_t argc, Value* argv[]) {
   assert(argc >= 1 && argv[0]->Is<String>());
   String* str = argv[0]->ToString();
   size_t buflen = str->Length();
