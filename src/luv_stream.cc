@@ -129,7 +129,7 @@ static Value* luv_write(uint32_t argc, Value* argv[]) {
   buf->len = len;
   buf->base = (char*)chunk;
   if (argc == 3) {
-    assert(argv[2]->Is<Function>());
+    // assert(argv[2]->Is<Function>());
     // TODO: store callback somehow;
   }
   uv_write_t* req = new uv_write_t;

@@ -39,18 +39,16 @@ ClientPrototype.end = (self) {
 
 ServerPrototype = {}
 ServerPrototype.listen = (self, port, host, callback) {
-  p("ServerPrototype.listen", self, port, host, callback)
   if (!host) host = "0.0.0.0"
   check(self.socket:bind(host, port))
   check(self.socket:listen(128, (status) {
     check(status)
     client = new ClientPrototype
-    client.socket = socket
     socket = Tcp.create()
+    client.socket = socket
     check(self.socket:accept(socket))
     self.onConnection(client)
     check(socket:readStart((nread, chunk) {
-      p("onRead", nread, chunk)
       if (nread == -1) {
         err = require('uv').lastError()
         if (err.name == "EOF") {
@@ -81,6 +79,7 @@ createServer = function (onConnection) {
 
 // Make an echo server using the API
 server = createServer((client) {
+  print("new client, piping data back to it")
   client:pipe(client)
 }):listen(8080)
 print("TCP echo server listening on port 8080")
