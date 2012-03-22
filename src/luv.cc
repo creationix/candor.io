@@ -3,8 +3,6 @@
 #include "candor.h"
 #include "uv.h"
 
-#include <stdio.h>
-
 using namespace candor;
 
 template uv_handle_t* UVData::ObjectTo<uv_handle_t>(candor::Object* obj);
@@ -24,9 +22,8 @@ UVData::UVData(size_t size, Object* prototype) {
 
   // Create a uv structure
   handle = (uv_handle_t*)new char[size];
-  printf("uv_handle_t* %p\n", handle);
   // And point it to us too.
-  handle->data = &obj;
+  handle->data = this;
 }
 
 UVData::~UVData() {
@@ -39,10 +36,9 @@ UVData::~UVData() {
 template <class T>
 T* UVData::ObjectTo(candor::Object* obj) {
   uv_handle_t* handle = CWrapper::Unwrap<UVData>(obj->Get("cdata"))->handle;
-  printf("handle %p\n", handle);
   return (T*)handle;
 }
 
 Object* UVData::VoidToObject(void* ptr) {
-  return *((Handle<Object>)(Object*)ptr);
+  return *((UVData*)ptr)->obj;
 }
