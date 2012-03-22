@@ -111,7 +111,7 @@ static void printValue(FILE* fd, Value* value, bool shallow) {
   }
 }
 
-static Value* Print(uint32_t argc, Arguments& argv) {
+static Value* Print(uint32_t argc, Value* argv[]) {
   // Print all arguments as strings with spaces and a newline.
   for (uint32_t i = 0; i < argc; i++) {
     String* string = argv[i]->ToString();
@@ -124,7 +124,7 @@ static Value* Print(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-static Value* PrettyPrint(uint32_t argc, Arguments& argv) {
+static Value* PrettyPrint(uint32_t argc, Value* argv[]) {
   // Print all arguments as strings with spaces and a newline.
   for (uint32_t i = 0; i < argc; i++) {
     printValue(stdout, argv[i], false);
@@ -136,7 +136,7 @@ static Value* PrettyPrint(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-static Value* Exit(uint32_t argc, Arguments& argv) {
+static Value* Exit(uint32_t argc, Value* argv[]) {
   int status = 0;
   if (argc) {
     status = argv[0]->ToNumber()->IntegralValue();
@@ -145,7 +145,7 @@ static Value* Exit(uint32_t argc, Arguments& argv) {
   return Nil::New();
 }
 
-static Value* LoadBuiltin(uint32_t argc, Arguments& argv) {
+static Value* LoadBuiltin(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   const char* name = argv[0]->As<String>()->Value();
   if (0 == strcmp(name, "string")) return cio_string_module();
