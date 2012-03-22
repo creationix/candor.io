@@ -1,6 +1,7 @@
 #include "luv_stream.h" // uv_stream_prototype
 #include "luv_tcp.h"
 
+#include "luv.h"
 #include "candor.h"
 #include "uv.h"
 
@@ -26,19 +27,15 @@ using namespace candor;
 
 static Value* luv_create_tcp(uint32_t argc, Value* argv[]) {
   assert(argc == 0);
-  Object* obj = uv_tcp_prototype()->Clone();
-  CData* cdata = CData::New(sizeof(uv_tcp_t));
-  uv_tcp_t* handle = (uv_tcp_t*)cdata->GetContents();
-  handle->data = new Handle<Object>(obj);
-  obj->Set("cdata", cdata);
-  uv_tcp_init(uv_default_loop(), handle);
-  return obj;
+  UVData* data = new UVData(sizeof(uv_tcp_t), uv_tcp_prototype());
+  uv_tcp_init(uv_default_loop(), (uv_tcp_t*)data->handle);
+  return *data->obj;
 }
 
 static Value* luv_tcp_nodelay(uint32_t argc, Value* argv[]) {
   assert(argc == 2);
   Object* obj = argv[0]->As<Object>();
-  uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_tcp_t* handle = UVData::ObjectTo<uv_tcp_t>(obj);
   int nodelay = argv[1]->ToBoolean()->IsTrue();
   int status = uv_tcp_nodelay(handle, nodelay);
   return Number::NewIntegral(status);
@@ -47,7 +44,7 @@ static Value* luv_tcp_nodelay(uint32_t argc, Value* argv[]) {
 static Value* luv_tcp_keepalive(uint32_t argc, Value* argv[]) {
   assert(argc == 3);
   Object* obj = argv[0]->As<Object>();
-  uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_tcp_t* handle = UVData::ObjectTo<uv_tcp_t>(obj);
   int keepalive = argv[1]->ToBoolean()->IsTrue();
   unsigned int delay = argv[2]->ToNumber()->IntegralValue();
   int status = uv_tcp_keepalive(handle, keepalive, delay);
@@ -57,7 +54,7 @@ static Value* luv_tcp_keepalive(uint32_t argc, Value* argv[]) {
 static Value* luv_tcp_bind(uint32_t argc, Value* argv[]) {
   assert(argc == 3);
   Object* obj = argv[0]->As<Object>();
-  uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_tcp_t* handle = UVData::ObjectTo<uv_tcp_t>(obj);
   const char* host = argv[1]->ToString()->Value();
   int port = argv[2]->ToNumber()->IntegralValue();
   int status = uv_tcp_bind(handle, uv_ip4_addr(host, port));
@@ -67,7 +64,7 @@ static Value* luv_tcp_bind(uint32_t argc, Value* argv[]) {
 static Value* luv_tcp_getsockname(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
-  uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_tcp_t* handle = UVData::ObjectTo<uv_tcp_t>(obj);
   int port = 0;
   char ip[INET6_ADDRSTRLEN];
   int family;
@@ -94,7 +91,7 @@ static Value* luv_tcp_getsockname(uint32_t argc, Value* argv[]) {
 static Value* luv_tcp_getpeername(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
-  uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_tcp_t* handle = UVData::ObjectTo<uv_tcp_t>(obj);
   int port = 0;
   char ip[INET6_ADDRSTRLEN];
   int family;
@@ -119,7 +116,7 @@ static Value* luv_tcp_getpeername(uint32_t argc, Value* argv[]) {
 }
 
 static void luv_on_connect(uv_connect_t* req, int status) {
-  Object* obj = **((Handle<Object>*)req->data);
+  Object* obj = UVData::VoidToObject(req->data);
   Value* callback = obj->Get("onConnect");
   if (callback->Is<Function>()) {
     Value* argv[1];
@@ -132,7 +129,7 @@ static void luv_on_connect(uv_connect_t* req, int status) {
 static Value* luv_tcp_connect(uint32_t argc, Value* argv[]) {
   assert(argc >= 3 && argc <= 4);
   Object* obj = argv[0]->As<Object>();
-  uv_tcp_t* handle = (uv_tcp_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_tcp_t* handle = UVData::ObjectTo<uv_tcp_t>(obj);
   const char* host = argv[1]->ToString()->Value();
   int port = argv[2]->ToNumber()->IntegralValue();
   if (argc == 4) {

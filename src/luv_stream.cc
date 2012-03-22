@@ -1,6 +1,7 @@
 #include "luv_handle.h" // uv_handle_prototype
 #include "luv_stream.h"
 
+#include "luv.h"
 #include "candor.h"
 #include "uv.h"
 
@@ -9,7 +10,7 @@
 using namespace candor;
 
 static void luv_on_shutdown(uv_shutdown_t* req, int status) {
-  Object* obj = **((Handle<Object>*)req->data);
+  Object* obj = UVData::VoidToObject(req->data);
   Value* callback = obj->Get("onShutdown");
   if (callback->Is<Function>()) {
     Value* argv[1];
@@ -22,7 +23,7 @@ static void luv_on_shutdown(uv_shutdown_t* req, int status) {
 static Value* luv_shutdown(uint32_t argc, Value* argv[]) {
   assert(argc >= 1 && argc <= 2);
   Object* obj = argv[0]->As<Object>();
-  uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_stream_t* handle = UVData::ObjectTo<uv_stream_t>(obj);
   if (argc == 2) {
     obj->Set("onShutdown", argv[1]->As<Function>());
   }
@@ -33,7 +34,7 @@ static Value* luv_shutdown(uint32_t argc, Value* argv[]) {
 }
 
 static void luv_on_connection(uv_stream_t* server, int status) {
-  Object* obj = **((Handle<Object>*)server->data);
+  Object* obj = UVData::VoidToObject(server->data);
   Value* callback = obj->Get("onConnection");
   if (callback->Is<Function>()) {
     Value* argv[1];
@@ -45,7 +46,7 @@ static void luv_on_connection(uv_stream_t* server, int status) {
 static Value* luv_listen(uint32_t argc, Value* argv[]) {
   assert(argc >= 2 && argc <= 3);
   Object* obj = argv[0]->As<Object>();
-  uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_stream_t* handle = UVData::ObjectTo<uv_stream_t>(obj);
   int backlog = argv[1]->ToNumber()->IntegralValue();
   if (argc == 3) {
     obj->Set("onConnection", argv[2]->As<Function>());
@@ -57,9 +58,9 @@ static Value* luv_listen(uint32_t argc, Value* argv[]) {
 static Value* luv_accept(uint32_t argc, Value* argv[]) {
   assert(argc == 2);
   Object* obj = argv[0]->As<Object>();
-  uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
   Object* obj2 = argv[1]->As<Object>();
-  uv_stream_t* client = (uv_stream_t*)obj2->Get("cdata")->As<CData>()->GetContents();
+  uv_stream_t* handle = UVData::ObjectTo<uv_stream_t>(obj);
+  uv_stream_t* client = UVData::ObjectTo<uv_stream_t>(obj2);
   int status = uv_accept(handle, client);
   return Number::NewIntegral(status);
 }
@@ -72,7 +73,7 @@ static uv_buf_t luv_on_alloc(uv_handle_t* handle, size_t suggested_size) {
 }
 
 static void luv_on_read(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
-  Object* obj = **((Handle<Object>*)stream->data);
+  Object* obj = UVData::VoidToObject(stream->data);
   Value* callback = obj->Get("onRead");
   if (callback->Is<Function>()) {
     Value* argv[2];
@@ -90,7 +91,7 @@ static void luv_on_read(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
 static Value* luv_read_start(uint32_t argc, Value* argv[]) {
   assert(argc >= 1 && argc <= 2);
   Object* obj = argv[0]->As<Object>();
-  uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_stream_t* handle = UVData::ObjectTo<uv_stream_t>(obj);
   if (argc == 2) {
     obj->Set("onRead", argv[1]->As<Function>());
   }
@@ -101,7 +102,7 @@ static Value* luv_read_start(uint32_t argc, Value* argv[]) {
 static Value* luv_read_stop(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
-  uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_stream_t* handle = UVData::ObjectTo<uv_stream_t>(obj);
   int status = uv_read_stop(handle);
   return Number::NewIntegral(status);
 }
@@ -121,7 +122,7 @@ static void luv_on_write(uv_write_t* req, int status) {
 static Value* luv_write(uint32_t argc, Value* argv[]) {
   assert(argc >= 2 && argc <= 3);
   Object* obj = argv[0]->As<Object>();
-  uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_stream_t* handle = UVData::ObjectTo<uv_stream_t>(obj);
   String* str = argv[1]->As<String>();
   uv_buf_t* buf = new uv_buf_t;
   uint32_t len = str->Length();
@@ -141,7 +142,7 @@ static Value* luv_write(uint32_t argc, Value* argv[]) {
 static Value* luv_is_readable(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
-  uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_stream_t* handle = UVData::ObjectTo<uv_stream_t>(obj);
   return uv_is_readable(handle) ?
     Boolean::True() :
     Boolean::False();
@@ -150,7 +151,7 @@ static Value* luv_is_readable(uint32_t argc, Value* argv[]) {
 static Value* luv_is_writable(uint32_t argc, Value* argv[]) {
   assert(argc == 1);
   Object* obj = argv[0]->As<Object>();
-  uv_stream_t* handle = (uv_stream_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_stream_t* handle = UVData::ObjectTo<uv_stream_t>(obj);
   return uv_is_writable(handle) ?
     Boolean::True() :
     Boolean::False();
