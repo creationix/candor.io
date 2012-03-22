@@ -2,6 +2,13 @@ UVDIR=deps/libuv
 CANDIR=deps/candor
 HTTPDIR=deps/http-parser
 
+LDFLAGS+=-pthread
+
+OS_NAME=$(shell uname -s)
+ifeq (${OS_NAME},Linux)
+LDFLAGS+= -lrt
+endif
+
 # verbose build
 export Q=
 MAKEFLAGS+=-e
@@ -39,7 +46,7 @@ build/%.o: src/%.cc build src/%.h ${DEPS}
 	g++ -g -Wall -Werror -c $< -o $@ -I${HTTPDIR} -I${UVDIR}/include -I${CANDIR}/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 build/canio: ${DEPS} ${LIBS}
-	g++ -g -o build/canio ${LIBS} ${DEPS} -pthread
+	g++ -g -o build/canio ${LIBS} ${DEPS} ${LDFLAGS}
 
 clean:
 	rm -rf build
