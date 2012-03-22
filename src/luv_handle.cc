@@ -15,7 +15,7 @@ static void luv_on_close(uv_handle_t* handle) {
   }
 }
 
-static Value* luv_close(uint32_t argc, Arguments& argv) {
+static Value* luv_close(uint32_t argc, Value* argv[]) {
   assert(argc >= 1 && argc <= 2);
   Object* obj = argv[0]->As<Object>();
   uv_handle_t* handle = (uv_handle_t*)obj->Get("cdata")->As<CData>()->GetContents();

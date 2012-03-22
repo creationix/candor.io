@@ -6,7 +6,7 @@
 
 using namespace candor;
 
-static Value* readUInt8(uint32_t argc, Arguments& argv) {
+static Value* readUInt8(uint32_t argc, Value* argv[]) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());
   String* str = argv[0]->ToString();
   unsigned int offset = argv[1]->ToNumber()->IntegralValue();
@@ -14,7 +14,7 @@ static Value* readUInt8(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(uint8_t*)((uint8_t*)str->Value() + offset));
 }
 
-static Value* readInt8(uint32_t argc, Arguments& argv) {
+static Value* readInt8(uint32_t argc, Value* argv[]) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());
   String* str = argv[0]->ToString();
   unsigned int offset = argv[1]->ToNumber()->IntegralValue();
@@ -22,7 +22,7 @@ static Value* readInt8(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(int8_t*)((uint8_t*)str->Value() + offset));
 }
 
-static Value* readUInt16(uint32_t argc, Arguments& argv) {
+static Value* readUInt16(uint32_t argc, Value* argv[]) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());
   String* str = argv[0]->ToString();
   unsigned int offset = argv[1]->ToNumber()->IntegralValue();
@@ -30,7 +30,7 @@ static Value* readUInt16(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(uint16_t*)((uint8_t*)str->Value() + offset));
 }
 
-static Value* readInt16(uint32_t argc, Arguments& argv) {
+static Value* readInt16(uint32_t argc, Value* argv[]) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());
   String* str = argv[0]->ToString();
   unsigned int offset = argv[1]->ToNumber()->IntegralValue();
@@ -38,7 +38,7 @@ static Value* readInt16(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(int16_t*)((uint8_t*)str->Value() + offset));
 }
 
-static Value* readUInt32(uint32_t argc, Arguments& argv) {
+static Value* readUInt32(uint32_t argc, Value* argv[]) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());
   String* str = argv[0]->ToString();
   unsigned int offset = argv[1]->ToNumber()->IntegralValue();
@@ -46,7 +46,7 @@ static Value* readUInt32(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(uint32_t*)((uint8_t*)str->Value() + offset));
 }
 
-static Value* readInt32(uint32_t argc, Arguments& argv) {
+static Value* readInt32(uint32_t argc, Value* argv[]) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());
   String* str = argv[0]->ToString();
   unsigned int offset = argv[1]->ToNumber()->IntegralValue();
@@ -54,7 +54,7 @@ static Value* readInt32(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(int32_t*)((uint8_t*)str->Value() + offset));
 }
 
-static Value* readUInt64(uint32_t argc, Arguments& argv) {
+static Value* readUInt64(uint32_t argc, Value* argv[]) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());
   String* str = argv[0]->ToString();
   unsigned int offset = argv[1]->ToNumber()->IntegralValue();
@@ -62,7 +62,7 @@ static Value* readUInt64(uint32_t argc, Arguments& argv) {
   return Number::NewIntegral(*(uint64_t*)((uint8_t*)str->Value() + offset));
 }
 
-static Value* readInt64(uint32_t argc, Arguments& argv) {
+static Value* readInt64(uint32_t argc, Value* argv[]) {
   assert(argc == 2 && argv[0]->Is<String>() && argv[1]->Is<Number>());
   String* str = argv[0]->ToString();
   unsigned int offset = argv[1]->ToNumber()->IntegralValue();
