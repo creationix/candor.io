@@ -4,7 +4,7 @@
 
 #include "cio_string.h"   // cio_string_module
 #include "lhttp_parser.h" // http_parser_module
-#include "luv.h"          // uv_base_module
+#include "luv_base.h"     // uv_base_module
 #include "luv_tcp.h"      // uv_tcp_module
 #include "luv_timer.h"    // uv_timer_module
 

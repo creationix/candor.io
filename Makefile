@@ -22,6 +22,7 @@ LIBS=build/main.o       \
      build/cio.o        \
      build/cio_string.o \
      build/luv.o        \
+     build/luv_base.o   \
      build/luv_handle.o \
      build/luv_stream.o \
      build/luv_tcp.o    \

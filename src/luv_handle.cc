@@ -1,5 +1,6 @@
 #include "luv_handle.h"
 
+#include "luv.h"
 #include "candor.h"
 #include "uv.h"
 
@@ -8,7 +9,7 @@
 using namespace candor;
 
 static void luv_on_close(uv_handle_t* handle) {
-  Object* obj = **((Handle<Object>*)handle->data);
+  Object* obj = UVData::VoidToObject(handle->data);
   Value* callback = obj->Get("onTimer");
   if (callback->Is<Function>()) {
     callback->As<Function>()->Call(0, NULL);;
@@ -18,7 +19,7 @@ static void luv_on_close(uv_handle_t* handle) {
 static Value* luv_close(uint32_t argc, Value* argv[]) {
   assert(argc >= 1 && argc <= 2);
   Object* obj = argv[0]->As<Object>();
-  uv_handle_t* handle = (uv_handle_t*)obj->Get("cdata")->As<CData>()->GetContents();
+  uv_handle_t* handle = UVData::ObjectTo<uv_handle_t>(obj);
   if (argc == 2) {
     obj->Set("onClose", argv[1]->As<Function>());
   }
