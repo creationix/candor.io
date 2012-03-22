@@ -22,18 +22,19 @@ server = Tcp.create()
 check(server:bind("0.0.0.0", 8080))
 
 onConnection = (client) {
-  p("onConnection")
+  p("new client", client)
 
   check(client:readStart((nread, chunk) {
     if (nread == -1) {
       err = require('uv').lastError()
       if (err.name == "EOF") {
-        p("EOF")
-        client:shutdown(() {
-          p("shutdown")
+        p("client end", client)
+        client:shutdown((status) {
+          p("client shutdown", client)
+          check(status)
           client:close(() {
-            p("closed")
-          })  
+            p("client left", client)
+          })
         })
       } else {
         throw(err)
@@ -41,7 +42,6 @@ onConnection = (client) {
       return
     }
     if (nread > 0) {
-      p("Echoing", chunk)
       client:write(chunk)
       return
     }

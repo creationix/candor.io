@@ -1,9 +1,21 @@
 print = global.print
 p = global.prettyPrint
 require = global.require
+throw = (err) {
+  p(err)
+  global.exit()
+}
+
+// Used to emit on errors when libuv badness happens
+check = (status) {
+  if (status) {
+    throw(require('uv').lastError())
+  }
+}
 
 Timer = require('timer')
 p("Timer", Timer)
+
 
 timer = Timer.create()
 timer2 = Timer.create()
@@ -11,24 +23,24 @@ timer2 = Timer.create()
 p("timer", timer)
 p("timer2", timer2)
 
-timer:start(2400, 0, () {
+check(timer:start(1000, 0, () {
   p("onTimeout", timer)
-  timer2:stop()
-  timer:stop()
+  check(timer2:stop())
+  check(timer:stop())
   timer:close(() {
     p("close", timer)
   })
   timer2:close(() {
     p("close2", timer2)
   })
-})
+}))
 
-timer2:start(333, 333, () {
+check(timer2:start(0, 150, () {
   p("onInterval", timer2)
   period = timer2:getRepeat()
   p("period", period)
-  timer2:setRepeat(period / 1.2 + 1)
-})
+  timer2:setRepeat(period / 1.2 + 2)
+}))
 
 p("timer", timer)
 p("timer2", timer2)
