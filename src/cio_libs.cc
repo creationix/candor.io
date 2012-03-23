@@ -1,5 +1,6 @@
 #include "cio_libs.h"
 
+#include "cio.h"    // cio_global_context
 #include "candor.h"
 
 #include <stdio.h>
@@ -19,6 +20,7 @@ Object* cio_##name##_module() {                 \
   int len = &_binary_lib_##name##_can_end -     \
             &_binary_lib_##name##_can_start;    \
   Function* fn = Function::New(code, len);      \
+  fn->SetContext(cio_global_context());         \
   module_##name.Wrap(fn->Call(0, NULL));        \
   return *module_##name;                        \
 }                                               \
