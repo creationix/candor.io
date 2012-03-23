@@ -3,8 +3,6 @@
 
 #include "candor.h"
 
-using namespace candor;
-
-void cio_init(Object* global);
+candor::Object* cio_global_context();
 
 #endif

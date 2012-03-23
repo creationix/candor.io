@@ -3,7 +3,7 @@
 #include "candor.h"
 #include "uv.h"
 
-#include "cio.h" // cio_init
+#include "cio.h" // cio_global_context
 
 #include <stdio.h> // fprintf
 #include <stdlib.h> // abort
@@ -61,11 +61,8 @@ int main(int argc, char** argv) {
   }
 
 
-  // Create a global context
-  Handle<Object> global(Object::New());
-  cio_init(*global);
-
-  code->SetContext(*global);
+  Object* global = cio_global_context();
+  code->SetContext(global);
   code->Call(0, NULL);
 
   // Start the libuv event loop

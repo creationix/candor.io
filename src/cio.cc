@@ -161,9 +161,14 @@ static Value* LoadBuiltin(uint32_t argc, Value* argv[]) {
   return Nil::New();
 }
 
-void cio_init(Object* global) {
+static Handle<Object> global;
+Object* cio_global_context() {
+  if (!global.IsEmpty()) return *global;
+  global.Wrap(Object::New());
   global->Set("print", Function::New(Print));
   global->Set("prettyPrint", Function::New(PrettyPrint));
   global->Set("exit", Function::New(Exit));
   global->Set("require", Function::New(LoadBuiltin));
+  return *global;
 }
+
