@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   // Load script and run
   off_t size = 0;
   const char* script = ReadContents(argv[1], &size);
-  Function* code = Function::New(script, size);
+  Function* code = Function::New(argv[1], script, size);
   delete script;
 
   if (isolate.HasError()) {
