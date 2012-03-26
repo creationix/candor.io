@@ -1,8 +1,9 @@
 print = global.print
+require = global.require
 
-net = global.require('net')
+
 // Make an echo server using the API
-server = net.createServer((client) {
+require('net').createServer((client) {
   print("new client, piping data back to it")
   client:pipe(client)
 }):listen(8080)

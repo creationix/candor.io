@@ -2,9 +2,9 @@ print = global.print
 p = global.prettyPrint
 
 Object = {
-  "new": (self, args...) {
+  new: (self, args...) {
     obj = new self
-    if (obj.initialize) obj:initialize(args...)
+    obj:initialize(args...)
     return obj
   }
 }
