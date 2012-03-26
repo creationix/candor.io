@@ -9,17 +9,14 @@ using namespace candor;
 
 
 #define XX(name)                                \
-extern char _binary_lib_##name##_can_start;     \
-extern char _binary_lib_##name##_can_end;       \
+extern const char __binding_lib_##name[];      \
 static Handle<Object> module_##name;            \
 Object* cio_##name##_module() {                 \
   if (!module_##name.IsEmpty()) {               \
     return *module_##name;                      \
   }                                             \
-  char* code = &_binary_lib_##name##_can_start; \
-  int len = &_binary_lib_##name##_can_end -     \
-            &_binary_lib_##name##_can_start;    \
-  Function* fn = Function::New(#name, code, len);\
+  Function* fn = Function::New(                 \
+      #name, __binding_lib_##name);           \
   fn->SetContext(cio_global_context());         \
   module_##name.Wrap(fn->Call(0, NULL));        \
   return *module_##name;                        \
