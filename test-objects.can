@@ -1,15 +1,13 @@
 print = global.print
 p = global.prettyPrint
 
-Object = {
-  new: (self, args...) {
-    obj = new self
-    obj:initialize(args...)
-    return obj
-  }
+new = (prototype, args...) {
+  obj = clone prototype
+  obj:initialize(args...)
+  return obj
 }
 
-Rectangle = new Object
+Rectangle = {}
 Rectangle.getArea = (self) {
   return self.w * self.h
 }
@@ -19,17 +17,17 @@ Rectangle.initialize = (self, w, h) {
 }
 p("Rectangle", Rectangle)
 
-Square = new Rectangle
+Square = clone Rectangle
 Square.initialize = (self, s) {
   self.w = s
   self.h = s
 }
 p("Square", Square)
 
-rect = Rectangle:new(3, 5)
+rect = new(Rectangle, 3, 5)
 p("rect", rect)
 print("Rectangle 3x5 = " + rect:getArea())
 
-square = Square:new(4)
+square = new(Square, 4)
 p("square", square)
 print("Square 4x4 = " + square:getArea())
