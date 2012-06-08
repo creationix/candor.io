@@ -8,12 +8,15 @@ OS_NAME=$(shell uname -s)
 ifeq (${OS_NAME},Linux)
 LDFLAGS+= -lrt
 endif
+ifeq (${OS_NAME},Darwin)
+LDFLAGS+= -framework CoreServices
+endif
 
 # verbose build
 export Q=
 MAKEFLAGS+=-e
 
-DEPS=${CANDIR}/candor.a  \
+DEPS=${CANDIR}/libcandor.a  \
      ${HTTPDIR}/http_parser.o \
      ${UVDIR}/uv.a
 
